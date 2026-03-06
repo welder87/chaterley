@@ -2,6 +2,7 @@ package entities
 
 import (
 	"chaterley/internal/app/core"
+	"fmt"
 )
 
 // Group представляет группу пользователя чата.
@@ -20,11 +21,15 @@ type Group struct {
 }
 
 // NewGroup создает новую группу.
-// В дальнейшем должна возвращать ошибку, если какое-то из полей невалидно.
-func NewGroup(name string) *Group {
+// Возвращает ошибку, если какое-то из полей невалидно.
+func NewGroup(name string) (*Group, error) {
+	newName, err := core.NewName(name)
+	if err != nil {
+		return nil, fmt.Errorf("Error with group name: %w", err)
+	}
 	return &Group{
 		id:        core.NewEntityID(),
-		name:      core.NewName(name),
+		name:      newName,
 		createdAt: core.NewCreatedAt(),
-	}
+	}, nil
 }

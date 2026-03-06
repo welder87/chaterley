@@ -1,8 +1,10 @@
 package core
 
 import (
+	"errors"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/google/uuid"
 )
@@ -36,10 +38,30 @@ type Name struct {
 	val string
 }
 
-func NewName(val string) Name {
+// NewName - создает наименование группы пользователя чата.
+// Фактически это slug.
+func NewName(val string) (Name, error) {
+	if utf8.RuneCountInString(val) == 0 {
+		return Name{val: val}, errors.New("Name is empty")
+	}
 	val = strings.TrimSpace(val)
-	// тут должны быть проверки (бизнес-правила для имени)
-	return Name{val: val}
+	val = strings.ToLower(val)
+	// Удаляем всё кроме букв, цифр и пробелов
+	val = nonAlphanumericRegex.ReplaceAllString(val, "-")
+	// Заменяем пробелы на дефисы
+	val = strings.ReplaceAll(val, " ", "-")
+	// Удаляем повторяющиеся дефисы
+	val = multipleHyphensRegex.ReplaceAllString(val, "-")
+	// Удаляем дефисы в начале и конце
+	val = strings.Trim(val, "-")
+	if utf8.RuneCountInString(val) == 0 {
+		return Name{val: val}, errors.New("Name is empty")
+	}
+	return Name{val: val}, nil
+}
+
+func (u *Name) Name() string {
+	return u.val
 }
 
 type PasswordHash struct {
