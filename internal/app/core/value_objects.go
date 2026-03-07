@@ -90,3 +90,37 @@ type UpdatedAt struct {
 type DeletedAt struct {
 	val time.Time
 }
+
+type IsEdited struct {
+	val bool
+}
+
+func NewIsEdited() IsEdited {
+	return IsEdited{val: false}
+}
+
+type IsReaded struct {
+	val bool
+}
+
+func NewIsReaded() IsReaded {
+	return IsReaded{val: false}
+}
+
+type MessageContent struct {
+	val string
+}
+
+func NewMessageContent(text string) MessageContent {
+	text = strings.TrimSpace(text)
+	return MessageContent{val: text}
+}
+
+type ContentType struct {
+	val string
+}
+
+func NewContentType(val string) ContentType {
+	val = strings.TrimSpace(val)
+	return ContentType{val: val}
+}
