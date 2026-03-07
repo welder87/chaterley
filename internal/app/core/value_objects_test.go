@@ -1,14 +1,13 @@
 package core
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 var (
-	ErrIsEmpty = errors.New("Name is empty")
+	nameZeroValue = Name{val: ""}
 )
 
 func TestName_NewName_WithoutError(t *testing.T) {
@@ -19,12 +18,13 @@ func TestName_NewName_WithoutError(t *testing.T) {
 		want string
 	}
 	testCases := []testCase{
-		{"1", "   test ", "test"},
-		{"2", " Калина test ", "test"},
-		{"2", " 34 - цвшодаырлова . ?;)() ", "34"},
+		{"Пробелы слева, справа без unicode", "   test ", "test"},
+		{"unicode и пробелы в начале", " Калина test", "test"},
+		{"Начало с J", "   J Калина 24 ", "j-24"},
+		{"Много дефис между валидными частями", "test--------1", "test-1"},
+		{"Много пробелов между валидными частями", "test      1", "test-1"},
 	}
 	for _, tc := range testCases {
-		// создаем копию для параллельных подтестов
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
@@ -38,25 +38,24 @@ func TestName_NewName_WithoutError(t *testing.T) {
 func TestName_NewName_WithError(t *testing.T) {
 	t.Parallel()
 	type testCase struct {
-		name   string
-		val    string
-		obj    Name
-		errMsg string
+		name string
+		val  string
+		err  error
 	}
 	testCases := []testCase{
-		{"1", "", Name{val: ""}, "Name is empty"},
-		{"2", " ", Name{val: ""}, "Name is empty"},
-		{"3", " Калина | ^^ ", Name{val: ""}, "Name is empty"},
+		{"Пустая строка", "", ErrNameEmpty},
+		{"Пустая строка с пробелами", " ", ErrNameEmpty},
+		{"Только unicode символы и пробелы", " Калина | ^^ ", ErrNameEmpty},
+		{"Начало с цифры", " 34 - цвшодаырлова . ?;)() ", ErrStartsWithDigit},
 	}
 	for _, tc := range testCases {
-		// создаем копию для параллельных подтестов
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			name, err := NewName(tc.val)
-			assert.EqualValues(t, name, tc.obj)
+			assert.EqualValues(t, name, nameZeroValue)
 			assert.Error(t, err)
-			assert.ErrorContains(t, err, tc.errMsg)
+			assert.ErrorIs(t, err, tc.err)
 		})
 	}
 }

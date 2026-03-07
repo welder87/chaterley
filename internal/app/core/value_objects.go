@@ -1,7 +1,6 @@
 package core
 
 import (
-	"errors"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -34,19 +33,22 @@ func NewLogin(val string) Login {
 	return Login{val: val}
 }
 
+// Name - наименование группы пользователя чата.
 type Name struct {
 	val string
 }
+
+var zeroValue = Name{val: ""}
 
 // NewName - создает наименование группы пользователя чата.
 // Фактически это slug.
 func NewName(val string) (Name, error) {
 	if utf8.RuneCountInString(val) == 0 {
-		return Name{val: val}, errors.New("Name is empty")
+		return zeroValue, ErrNameEmpty
 	}
 	val = strings.TrimSpace(val)
 	val = strings.ToLower(val)
-	// Удаляем всё кроме букв, цифр и пробелов
+	// Удаляем всё кроме английских букв в нижнем регистре, цифр и пробелов
 	val = nonAlphanumericRegex.ReplaceAllString(val, "-")
 	// Заменяем пробелы на дефисы
 	val = strings.ReplaceAll(val, " ", "-")
@@ -54,12 +56,16 @@ func NewName(val string) (Name, error) {
 	val = multipleHyphensRegex.ReplaceAllString(val, "-")
 	// Удаляем дефисы в начале и конце
 	val = strings.Trim(val, "-")
-	if utf8.RuneCountInString(val) == 0 {
-		return Name{val: val}, errors.New("Name is empty")
+	if len(val) == 0 {
+		return zeroValue, ErrNameEmpty
+	}
+	if '1' <= val[0] && val[0] <= '9' {
+		return zeroValue, ErrStartsWithDigit
 	}
 	return Name{val: val}, nil
 }
 
+// Name - геттер для получения наименования группы пользователя чата.
 func (u *Name) Name() string {
 	return u.val
 }
