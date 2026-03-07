@@ -18,6 +18,8 @@ type Message struct {
 	authorId core.EntityID
 	// Флаг изменения сообщения
 	isEdited core.IsEdited
+	// Флаг прочтения сообщения
+	isReaded core.IsReaded
 	// Тело сообщения
 	content core.MessageContent
 	// Тип сообщения
@@ -32,6 +34,7 @@ func NewMessage(authorId core.EntityID, content string, contentType string) *Mes
 		createdAt:   core.NewCreatedAt(),
 		authorId:    authorId,
 		isEdited:    core.NewIsEdited(),
+		isReaded:    core.NewIsReaded(),
 		content:     core.NewMessageContent(content),
 		contentType: core.NewContentType(contentType),
 	}

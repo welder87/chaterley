@@ -77,6 +77,14 @@ func NewIsEdited() IsEdited {
 	return IsEdited{val: false}
 }
 
+type IsReaded struct {
+	val bool
+}
+
+func NewIsReaded() IsReaded {
+	return IsReaded{val: false}
+}
+
 type MessageContent struct {
 	val string
 }
