@@ -19,20 +19,20 @@ type Message struct {
 	// Флаг изменения сообщения
 	isEdited core.IsEdited
 	// Тело сообщения
-	body core.MessageBody
+	content core.MessageContent
 	// Тип сообщения
 	contentType core.ContentType
 }
 
 // NewMessage создает новый экземпляр структуры Message и возвращает указатель.
 // В дальнейшем должна возвращать ошибку, если какое-то из полей невалидно.
-func NewMessage(authorId core.EntityID, body string, contentType string) *Message {
+func NewMessage(authorId core.EntityID, content string, contentType string) *Message {
 	return &Message{
 		id:          core.NewEntityID(),
 		createdAt:   core.NewCreatedAt(),
 		authorId:    authorId,
 		isEdited:    core.NewIsEdited(),
-		body:        core.NewMessageBody(body),
+		content:     core.NewMessageContent(content),
 		contentType: core.NewContentType(contentType),
 	}
 }

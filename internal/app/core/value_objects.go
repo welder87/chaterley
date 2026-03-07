@@ -77,13 +77,13 @@ func NewIsEdited() IsEdited {
 	return IsEdited{val: false}
 }
 
-type MessageBody struct {
+type MessageContent struct {
 	val string
 }
 
-func NewMessageBody(text string) MessageBody {
+func NewMessageContent(text string) MessageContent {
 	text = strings.TrimSpace(text)
-	return MessageBody{val: text}
+	return MessageContent{val: text}
 }
 
 type ContentType struct {
