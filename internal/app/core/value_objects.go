@@ -3,6 +3,7 @@ package core
 import (
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/google/uuid"
 )
@@ -32,14 +33,41 @@ func NewLogin(val string) Login {
 	return Login{val: val}
 }
 
+// Name - наименование группы пользователя чата.
 type Name struct {
 	val string
 }
 
-func NewName(val string) Name {
+var zeroValue = Name{val: ""}
+
+// NewName - создает наименование группы пользователя чата.
+// Фактически это slug.
+func NewName(val string) (Name, error) {
+	if utf8.RuneCountInString(val) == 0 {
+		return zeroValue, ErrNameEmpty
+	}
 	val = strings.TrimSpace(val)
-	// тут должны быть проверки (бизнес-правила для имени)
-	return Name{val: val}
+	val = strings.ToLower(val)
+	// Удаляем всё кроме английских букв в нижнем регистре, цифр и пробелов
+	val = nonAlphanumericRegex.ReplaceAllString(val, "-")
+	// Заменяем пробелы на дефисы
+	val = strings.ReplaceAll(val, " ", "-")
+	// Удаляем повторяющиеся дефисы
+	val = multipleHyphensRegex.ReplaceAllString(val, "-")
+	// Удаляем дефисы в начале и конце
+	val = strings.Trim(val, "-")
+	if len(val) == 0 {
+		return zeroValue, ErrNameEmpty
+	}
+	if '1' <= val[0] && val[0] <= '9' {
+		return zeroValue, ErrStartsWithDigit
+	}
+	return Name{val: val}, nil
+}
+
+// Name - геттер для получения наименования группы пользователя чата.
+func (u *Name) Name() string {
+	return u.val
 }
 
 type PasswordHash struct {
