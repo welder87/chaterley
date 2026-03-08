@@ -93,8 +93,16 @@ type UpdatedAt struct {
 	val time.Time
 }
 
+func NewUpdatedAt() UpdatedAt {
+	return UpdatedAt{val: time.Now()}
+}
+
 type DeletedAt struct {
 	val time.Time
+}
+
+func NewDeletedAt() DeletedAt {
+	return DeletedAt{val: time.Now()}
 }
 
 type IsEdited struct {

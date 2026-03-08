@@ -36,3 +36,56 @@ func NewGroup(name string) (*Group, error) {
 		createdAt: core.NewCreatedAt(),
 	}, nil
 }
+
+// ID - геттер для получения идентификатора группы пользователя чата.
+func (g *Group) ID() core.EntityID {
+	return g.id
+}
+
+// Name - геттер для получения наименования группы пользователя чата.
+func (g *Group) Name() core.Name {
+	return g.name
+}
+
+// SetName - сеттер для присваивания нового наименования группы пользователю чата.
+func (g *Group) SetName(name string) error {
+	newName, err := core.NewName(name)
+	if err != nil {
+		return core.ValidationError{
+			Field:  "Name",
+			Reason: "Is empty",
+			Err:    err,
+		}
+	}
+	if g.name.Name() == newName.Name() {
+		return core.ValidationError{
+			Field:  "Name",
+			Reason: "Name unchanged",
+			Err:    core.ErrNameUnchanged,
+		}
+	}
+	g.name = newName
+	g.updatedAt = core.NewUpdatedAt()
+	return nil
+}
+
+// CreatedAt - геттер для получения даты создания группы пользователя чата.
+func (g *Group) CreatedAt() core.CreatedAt {
+	return g.createdAt
+}
+
+// UpdatedAt - геттер для получения даты обновления группы пользователя чата.
+func (g *Group) UpdatedAt() core.UpdatedAt {
+	return g.updatedAt
+}
+
+// DeletedAt - геттер для получения даты удаления группы пользователя чата.
+func (g *Group) DeletedAt() core.DeletedAt {
+	return g.deletedAt
+}
+
+func (g *Group) Delete(name string) error {
+	g.deletedAt = core.NewDeletedAt()
+	g.updatedAt = core.NewUpdatedAt()
+	return nil
+}
