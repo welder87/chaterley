@@ -57,7 +57,7 @@ func (g *Group) SetName(name string) error {
 			Err:    err,
 		}
 	}
-	if g.name.Name() == newName.Name() {
+	if g.name == newName {
 		return core.ValidationError{
 			Field:  "Name",
 			Reason: "Name unchanged",
@@ -84,7 +84,7 @@ func (g *Group) DeletedAt() core.DeletedAt {
 	return g.deletedAt
 }
 
-func (g *Group) Delete(name string) error {
+func (g *Group) Delete() error {
 	g.deletedAt = core.NewDeletedAt()
 	g.updatedAt = core.NewUpdatedAt()
 	return nil

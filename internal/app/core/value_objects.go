@@ -33,14 +33,14 @@ func NewLogin(val string) Login {
 	return Login{val: val}
 }
 
-// Name - наименование группы пользователя чата.
+// Name - наименование.
 type Name struct {
 	val string
 }
 
 var zeroValue = Name{val: ""}
 
-// NewName - создает наименование группы пользователя чата.
+// NewName - создает наименование.
 // Фактически это slug.
 func NewName(val string) (Name, error) {
 	if utf8.RuneCountInString(val) == 0 {
@@ -65,8 +65,18 @@ func NewName(val string) (Name, error) {
 	return Name{val: val}, nil
 }
 
-// Name - геттер для получения наименования группы пользователя чата.
-func (u *Name) Name() string {
+// Val - геттер для получения наименования.
+func (u Name) Val() string {
+	return u.val
+}
+
+// Equal - сравнение наименований.
+func (u Name) Equal(other Name) bool {
+	return u.val == other.val
+}
+
+// String - приведение наименования к строке.
+func (u Name) String() string {
 	return u.val
 }
 
@@ -81,28 +91,79 @@ func NewPasswordHash(password string) PasswordHash {
 	return PasswordHash{val: val}
 }
 
+// CreatedAt - дата создания.
 type CreatedAt struct {
 	val time.Time
 }
 
+// NewCreatedAt - получение даты создания.
 func NewCreatedAt() CreatedAt {
 	return CreatedAt{val: time.Now()}
 }
 
+// Val - геттер для получения даты создания.
+func (c CreatedAt) Val() time.Time {
+	return c.val
+}
+
+// Equal - сравнение даты создания с другой датой создания.
+func (c CreatedAt) Equal(other CreatedAt) bool {
+	return c.val == other.val
+}
+
+// String - приведение даты создания к строке.
+func (c CreatedAt) String() string {
+	return c.val.String()
+}
+
+// UpdatedAt - дата обновления.
 type UpdatedAt struct {
 	val time.Time
 }
 
+// NewUpdatedAt - получение даты обновления.
 func NewUpdatedAt() UpdatedAt {
 	return UpdatedAt{val: time.Now()}
 }
 
+// Val - геттер для получения даты обновления.
+func (u UpdatedAt) Val() time.Time {
+	return u.val
+}
+
+// Equal - сравнение даты обновления с другой датой обновления.
+func (u UpdatedAt) Equal(other UpdatedAt) bool {
+	return u.val == other.val
+}
+
+// String - приведение даты обновления к строке.
+func (u UpdatedAt) String() string {
+	return u.val.String()
+}
+
+// UpdatedAt - дата удаления.
 type DeletedAt struct {
 	val time.Time
 }
 
+// NewDeletedAt - - получение даты удаления.
 func NewDeletedAt() DeletedAt {
 	return DeletedAt{val: time.Now()}
+}
+
+// Val - геттер для получения даты удаления.
+func (u DeletedAt) Val() time.Time {
+	return u.val
+}
+
+// Equal - сравнение даты удаления с другой датой удаления.
+func (u DeletedAt) Equal(other DeletedAt) bool {
+	return u.val == other.val
+}
+
+// String - приведение даты удаления к строке.
+func (u DeletedAt) String() string {
+	return u.val.String()
 }
 
 type IsEdited struct {

@@ -6,56 +6,29 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	nameZeroValue = Name{val: ""}
-)
-
 func TestName_NewName_WithoutError(t *testing.T) {
 	t.Parallel()
-	type testCase struct {
-		name string
-		val  string
-		want string
-	}
-	testCases := []testCase{
-		{"Пробелы слева, справа без unicode", "   test ", "test"},
-		{"unicode и пробелы в начале", " Калина test", "test"},
-		{"Начало с J", "   J Калина 24 ", "j-24"},
-		{"Много дефис между валидными частями", "test--------1", "test-1"},
-		{"Много пробелов между валидными частями", "test      1", "test-1"},
-	}
-	for _, tc := range testCases {
+	for _, tc := range SuccessfulNameTestCases {
 		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
+		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
-			name, err := NewName(tc.val)
+			name, err := NewName(tc.Val)
 			assert.NoError(t, err)
-			assert.Equal(t, name.Name(), tc.want)
+			assert.Equal(t, name.val, tc.Want)
 		})
 	}
 }
 
 func TestName_NewName_WithError(t *testing.T) {
 	t.Parallel()
-	type testCase struct {
-		name string
-		val  string
-		err  error
-	}
-	testCases := []testCase{
-		{"Пустая строка", "", ErrNameEmpty},
-		{"Пустая строка с пробелами", " ", ErrNameEmpty},
-		{"Только unicode символы и пробелы", " Калина | ^^ ", ErrNameEmpty},
-		{"Начало с цифры", " 34 - цвшодаырлова . ?;)() ", ErrStartsWithDigit},
-	}
-	for _, tc := range testCases {
+	for _, tc := range FailedNameTestCases {
 		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
+		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
-			name, err := NewName(tc.val)
-			assert.EqualValues(t, name, nameZeroValue)
+			name, err := NewName(tc.Val)
+			assert.EqualValues(t, name, NameZeroValue)
 			assert.Error(t, err)
-			assert.ErrorIs(t, err, tc.err)
+			assert.ErrorIs(t, err, tc.Err)
 		})
 	}
 }
