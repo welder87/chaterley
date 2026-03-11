@@ -6,9 +6,11 @@ import (
 )
 
 var (
-	ErrNameEmpty       = errors.New("name is empty")
-	ErrStartsWithDigit = errors.New("cannot start with a digit")
-	ErrNameUnchanged   = errors.New("name must be different from current")
+	ErrNameEmpty        = errors.New("name is empty")
+	ErrStartsWithDigit  = errors.New("cannot start with a digit")
+	ErrNameUnchanged    = errors.New("name must be different from current")
+	ErrContentEmpty     = errors.New("content is empty")
+	ErrContentTypeEmpty = errors.New("content type is empty")
 )
 
 type ValidationError struct {

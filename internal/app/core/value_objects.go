@@ -23,6 +23,21 @@ func NewEntityID() EntityID {
 	}
 }
 
+// Val - геттер получения ID сущности.
+func (e EntityID) Val() uuid.UUID {
+	return e.val
+}
+
+// Equal - сравнение текущего ID сущности с переданным.
+func (e EntityID) Equal(other EntityID) bool {
+	return e.val == other.val
+}
+
+// String - приведение ID сущности к строке.
+func (e EntityID) String() string {
+	return e.val.String()
+}
+
 type Login struct {
 	val string
 }
@@ -31,6 +46,21 @@ func NewLogin(val string) Login {
 	val = strings.TrimSpace(val)
 	// тут должны быть проверки (бизнес-правила для логина)
 	return Login{val: val}
+}
+
+// Val - геттер получения логина.
+func (l Login) Val() string {
+	return l.val
+}
+
+// Equal - сравнение текущего логина с переданным.
+func (l Login) Equal(other Login) bool {
+	return l.val == other.val
+}
+
+// String - приведение логина к строке.
+func (l Login) String() string {
+	return l.val
 }
 
 // Name - наименование.
@@ -166,14 +196,6 @@ func (u DeletedAt) String() string {
 	return u.val.String()
 }
 
-type IsEdited struct {
-	val bool
-}
-
-func NewIsEdited() IsEdited {
-	return IsEdited{val: false}
-}
-
 type IsReaded struct {
 	val bool
 }
@@ -182,20 +204,74 @@ func NewIsReaded() IsReaded {
 	return IsReaded{val: false}
 }
 
+// Val - геттер получения флага о прочтении сообщения.
+func (r IsReaded) Val() bool {
+	return r.val
+}
+
+// Equal - сравнение текущего флага с переданным.
+func (r IsReaded) Equal(other IsReaded) bool {
+	return r.val == other.val
+}
+
 type MessageContent struct {
 	val string
 }
 
-func NewMessageContent(text string) MessageContent {
+var emptyMessageContent = MessageContent{val: ""}
+
+func NewMessageContent(text string) (MessageContent, error) {
 	text = strings.TrimSpace(text)
-	return MessageContent{val: text}
+	// Недопускается отправка пустого сообщения
+	if text == "" {
+		return emptyMessageContent, ErrContentEmpty
+	}
+
+	return MessageContent{val: text}, nil
+}
+
+// Val - геттер получения контента сообщения.
+func (m MessageContent) Val() string {
+	return m.val
+}
+
+// Equal - сравнение текущего сообщения с переданным.
+func (m MessageContent) Equal(other MessageContent) bool {
+	return m.val == other.val
+}
+
+// String - получение строкого представления сообщения.
+func (m MessageContent) String() string {
+	return m.val
 }
 
 type ContentType struct {
 	val string
 }
 
-func NewContentType(val string) ContentType {
+var emptyContentType = ContentType{val: ""}
+
+func NewContentType(val string) (ContentType, error) {
 	val = strings.TrimSpace(val)
-	return ContentType{val: val}
+	// Недопускается наличие неопределенного или пустого контента
+	if val == "" {
+		return emptyContentType, ErrContentTypeEmpty
+	}
+
+	return ContentType{val: val}, nil
+}
+
+// Val - геттер получение типа контента.
+func (c ContentType) Val() string {
+	return c.val
+}
+
+// Equal - сравнение текущего типа контента с переданным.
+func (c ContentType) Equal(other ContentType) bool {
+	return c.val == other.val
+}
+
+// String - получение строкого представления типа контента.
+func (c ContentType) String() string {
+	return c.val
 }
