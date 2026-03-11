@@ -3,6 +3,7 @@ package core
 import (
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/google/uuid"
 )
@@ -32,14 +33,51 @@ func NewLogin(val string) Login {
 	return Login{val: val}
 }
 
+// Name - наименование.
 type Name struct {
 	val string
 }
 
-func NewName(val string) Name {
+var zeroValue = Name{val: ""}
+
+// NewName - создает наименование.
+// Фактически это slug.
+func NewName(val string) (Name, error) {
+	if utf8.RuneCountInString(val) == 0 {
+		return zeroValue, ErrNameEmpty
+	}
 	val = strings.TrimSpace(val)
-	// тут должны быть проверки (бизнес-правила для имени)
-	return Name{val: val}
+	val = strings.ToLower(val)
+	// Удаляем всё кроме английских букв в нижнем регистре, цифр и пробелов
+	val = nonAlphanumericRegex.ReplaceAllString(val, "-")
+	// Заменяем пробелы на дефисы
+	val = strings.ReplaceAll(val, " ", "-")
+	// Удаляем повторяющиеся дефисы
+	val = multipleHyphensRegex.ReplaceAllString(val, "-")
+	// Удаляем дефисы в начале и конце
+	val = strings.Trim(val, "-")
+	if len(val) == 0 {
+		return zeroValue, ErrNameEmpty
+	}
+	if '1' <= val[0] && val[0] <= '9' {
+		return zeroValue, ErrStartsWithDigit
+	}
+	return Name{val: val}, nil
+}
+
+// Val - геттер для получения наименования.
+func (u Name) Val() string {
+	return u.val
+}
+
+// Equal - сравнение наименований.
+func (u Name) Equal(other Name) bool {
+	return u.val == other.val
+}
+
+// String - приведение наименования к строке.
+func (u Name) String() string {
+	return u.val
 }
 
 type PasswordHash struct {
@@ -53,20 +91,79 @@ func NewPasswordHash(password string) PasswordHash {
 	return PasswordHash{val: val}
 }
 
+// CreatedAt - дата создания.
 type CreatedAt struct {
 	val time.Time
 }
 
+// NewCreatedAt - получение даты создания.
 func NewCreatedAt() CreatedAt {
 	return CreatedAt{val: time.Now()}
 }
 
+// Val - геттер для получения даты создания.
+func (c CreatedAt) Val() time.Time {
+	return c.val
+}
+
+// Equal - сравнение даты создания с другой датой создания.
+func (c CreatedAt) Equal(other CreatedAt) bool {
+	return c.val == other.val
+}
+
+// String - приведение даты создания к строке.
+func (c CreatedAt) String() string {
+	return c.val.String()
+}
+
+// UpdatedAt - дата обновления.
 type UpdatedAt struct {
 	val time.Time
 }
 
+// NewUpdatedAt - получение даты обновления.
+func NewUpdatedAt() UpdatedAt {
+	return UpdatedAt{val: time.Now()}
+}
+
+// Val - геттер для получения даты обновления.
+func (u UpdatedAt) Val() time.Time {
+	return u.val
+}
+
+// Equal - сравнение даты обновления с другой датой обновления.
+func (u UpdatedAt) Equal(other UpdatedAt) bool {
+	return u.val == other.val
+}
+
+// String - приведение даты обновления к строке.
+func (u UpdatedAt) String() string {
+	return u.val.String()
+}
+
+// UpdatedAt - дата удаления.
 type DeletedAt struct {
 	val time.Time
+}
+
+// NewDeletedAt - - получение даты удаления.
+func NewDeletedAt() DeletedAt {
+	return DeletedAt{val: time.Now()}
+}
+
+// Val - геттер для получения даты удаления.
+func (u DeletedAt) Val() time.Time {
+	return u.val
+}
+
+// Equal - сравнение даты удаления с другой датой удаления.
+func (u DeletedAt) Equal(other DeletedAt) bool {
+	return u.val == other.val
+}
+
+// String - приведение даты удаления к строке.
+func (u DeletedAt) String() string {
+	return u.val.String()
 }
 
 type IsEdited struct {
