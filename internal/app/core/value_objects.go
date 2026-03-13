@@ -23,6 +23,21 @@ func NewEntityID() EntityID {
 	}
 }
 
+// Val - геттер для получения
+func (e EntityID) Val() string {
+	return e.val.String()
+}
+
+// Equal - сравнение
+func (e EntityID) Equal(other EntityID) bool {
+	return e.val == e.val
+}
+
+// String - приведение наименования к строке.
+func (e EntityID) String() string {
+	return e.val.String()
+}
+
 type Login struct {
 	val string
 }
@@ -31,6 +46,11 @@ func NewLogin(val string) Login {
 	val = strings.TrimSpace(val)
 	// тут должны быть проверки (бизнес-правила для логина)
 	return Login{val: val}
+}
+
+// Val - геттер для получения.
+func (l Login) Val() string {
+	return l.val
 }
 
 // Name - наименование.
