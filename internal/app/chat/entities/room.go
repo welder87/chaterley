@@ -18,8 +18,14 @@ type Room struct {
 	id core.EntityID
 	// name - наименование Комнаты
 	name core.Name
-	// members - пользователи в Комнате.
-	members map[core.EntityID]User
+	// memberIDs - идентификаторы Пользователей в Комнате.
+	memberIDs map[core.EntityID]struct{}
+	// recentMessages - недавние Сообщения в Комнате.
+	recentMessages []*Message
+	// lastMessageID - последнее Сообщение для пагинации.
+	lastMessageID *core.EntityID
+	// messages - сообщения для добавления в Комнате.
+	messages []*Message
 	// createdAt - дата создания Комнаты
 	createdAt core.CreatedAt
 	// updatedAt - дата обновления Комнаты
@@ -38,7 +44,7 @@ type Room struct {
 
 // NewRoom создает новую Комнату.
 // Возвращает ошибку core.ValidationError, если какое-то из полей невалидно.
-func NewRoom(name string, members ...User) (*Room, error) {
+func NewRoom(name string) (*Room, error) {
 	newName, err := core.NewName(name)
 	if err != nil {
 		return nil, core.ValidationError{
@@ -46,16 +52,6 @@ func NewRoom(name string, members ...User) (*Room, error) {
 			Code:  core.Unknown,
 			Err:   err,
 		}
-	}
-	if len(members) < minUserCount {
-		return nil, core.ValidationError{Field: "members", Code: core.MinMemberCount}
-	}
-	membersByID := make(map[core.EntityID]User, minUserCount)
-	addedMemberIds := make(map[core.EntityID]struct{}, minUserCount)
-	removedUsers := make(map[core.EntityID]struct{}, minUserCount)
-	for idx := range members {
-		membersByID[members[idx].id] = members[idx]
-		addedMemberIds[members[idx].id] = struct{}{}
 	}
 	changedFields := map[string]struct{}{
 		"id":        {},
@@ -68,10 +64,12 @@ func NewRoom(name string, members ...User) (*Room, error) {
 		name:             newName,
 		createdAt:        core.NewCreatedAt(),
 		updatedAt:        core.NewUpdatedAt(),
-		members:          membersByID,
+		memberIDs:        make(map[core.EntityID]struct{}, minUserCount),
+		recentMessages:   []*Message{},
+		messageCount:     0,
 		isDirty:          true,
-		addedMemberIds:   addedMemberIds,
-		removedMemberIds: removedUsers,
+		addedMemberIds:   make(map[core.EntityID]struct{}, minUserCount),
+		removedMemberIds: make(map[core.EntityID]struct{}, minUserCount),
 		changedFields:    changedFields,
 	}, nil
 }
@@ -102,16 +100,16 @@ func (r *Room) ChangeName(name string) error {
 }
 
 // AddMember - добавление члена Комнаты.
-func (r *Room) AddMember(member User) error {
-	if _, ok := r.members[member.id]; ok {
+func (r *Room) AddMember(memberId core.EntityID) error {
+	if _, ok := r.memberIDs[memberId]; ok {
 		return core.ValidationError{Field: "members", Code: core.MemberIsExists}
 	}
-	if len(r.members) > maxUserCount {
+	if len(r.memberIDs) > maxUserCount {
 		return core.ValidationError{Field: "members", Code: core.MaxMemberCount}
 	}
-	r.members[member.id] = member
-	r.addedMemberIds[member.id] = struct{}{}
-	delete(r.removedMemberIds, member.id)
+	r.memberIDs[memberId] = struct{}{}
+	r.addedMemberIds[memberId] = struct{}{}
+	delete(r.removedMemberIds, memberId)
 	r.updatedAt = core.NewUpdatedAt()
 	r.isDirty = true
 	r.changedFields["updatedAt"] = struct{}{}
@@ -120,13 +118,13 @@ func (r *Room) AddMember(member User) error {
 
 // RemoveMember - удаление члена Комнаты.
 func (r *Room) RemoveMember(memberID core.EntityID) error {
-	if _, ok := r.members[memberID]; !ok {
+	if _, ok := r.memberIDs[memberID]; !ok {
 		return core.ValidationError{Field: "members", Code: core.MemberIsNotExists}
 	}
-	if len(r.members) <= minUserCount {
+	if len(r.memberIDs) <= minUserCount {
 		return core.ValidationError{Field: "members", Code: core.MinMemberCount}
 	}
-	delete(r.members, memberID)
+	delete(r.memberIDs, memberID)
 	r.removedMemberIds[memberID] = struct{}{}
 	delete(r.addedMemberIds, memberID)
 	r.updatedAt = core.NewUpdatedAt()
@@ -135,13 +133,26 @@ func (r *Room) RemoveMember(memberID core.EntityID) error {
 	return nil
 }
 
+// AddMember - добавление члена Комнаты.
+func (r *Room) AddMessage(authorID core.EntityID, content string) error {
+	message := NewMessage(authorID, content)
+	r.messages = append(r.messages, message)
+	r.memberIDs[memberId] = struct{}{}
+	r.addedMemberIds[memberId] = struct{}{}
+	delete(r.removedMemberIds, memberId)
+	r.updatedAt = core.NewUpdatedAt()
+	r.isDirty = true
+	r.changedFields["updatedAt"] = struct{}{}
+	return nil
+}
+
 // Delete - удаление Комнаты.
 func (r *Room) Delete() error {
-	for memberID := range r.members {
+	for memberID := range r.memberIDs {
 		r.removedMemberIds[memberID] = struct{}{}
 	}
 	clear(r.addedMemberIds)
-	clear(r.members)
+	clear(r.memberIDs)
 	deletedAt := core.NewDeletedAt()
 	r.updatedAt, r.deletedAt = core.NewUpdatedAt(), &deletedAt
 	r.isDirty = true
@@ -158,10 +169,12 @@ func (r *Room) clearChanges() {
 }
 
 // ToSnapshot - сериализация состояния Комнаты.
-func (r *Room) ToSnapshot() RoomSnapshot {
-	members := make([]UserSnapshot, 0, len(r.members))
-	for _, member := range r.members {
-		members = append(members, member.ToSnapshot())
+func (r *Room) ToSnapshot() (RoomSnapshot, error) {
+	if len(r.memberIDs) < minUserCount {
+		return RoomSnapshot{}, core.ValidationError{
+			Field: "members",
+			Code:  core.MinMemberCount,
+		}
 	}
 	addedMemberIds := make([]core.EntityID, 0, len(r.addedMemberIds))
 	for memberId := range r.addedMemberIds {
@@ -177,7 +190,6 @@ func (r *Room) ToSnapshot() RoomSnapshot {
 		Name:             r.name.Val(),
 		CreatedAt:        r.createdAt.Val(),
 		UpdatedAt:        r.updatedAt.Val(),
-		Members:          members,
 		AddedMemberIds:   addedMemberIds,
 		RemovedMemberIds: removedMemberIds,
 		ChangedFields:    changedFields,
@@ -187,7 +199,7 @@ func (r *Room) ToSnapshot() RoomSnapshot {
 		snapshot.DeletedAt = &deletedAt
 	}
 	r.clearChanges()
-	return snapshot
+	return snapshot, nil
 }
 
 // RoomSnapshot - структура данных - состояние Комнаты, на момент сериализации.
@@ -202,8 +214,6 @@ type RoomSnapshot struct {
 	UpdatedAt time.Time
 	// DeletedAt - дата удаления Комнаты
 	DeletedAt *time.Time
-	// Members - пользователи в Комнате.
-	Members []UserSnapshot
 	// AddedMemberIds - идентификаторы добавленных пользователей в Комнату.
 	AddedMemberIds []core.EntityID
 	// RemovedMemberIds - идентификаторы удаленных пользователей из Комнаты.

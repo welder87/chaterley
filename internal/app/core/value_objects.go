@@ -186,36 +186,19 @@ func (u DeletedAt) String() string {
 	return u.val.String()
 }
 
-type IsEdited struct {
+type Seen struct {
 	val bool
 }
 
-func NewIsEdited() IsEdited {
-	return IsEdited{val: false}
+func NewSeen() Seen {
+	return Seen{val: false}
 }
 
-type IsReaded struct {
-	val bool
-}
-
-func NewIsReaded() IsReaded {
-	return IsReaded{val: false}
-}
-
-type MessageContent struct {
+type Content struct {
 	val string
 }
 
-func NewMessageContent(text string) MessageContent {
+func NewContent(text string) Content {
 	text = strings.TrimSpace(text)
-	return MessageContent{val: text}
-}
-
-type ContentType struct {
-	val string
-}
-
-func NewContentType(val string) ContentType {
-	val = strings.TrimSpace(val)
-	return ContentType{val: val}
+	return Content{val: text}
 }

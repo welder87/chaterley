@@ -17,3 +17,12 @@ type ValueObject[T any] interface {
 	Comparable[T]
 	fmt.Stringer
 }
+
+// Snapshooter - интерфейс для снимка состояния агрегата
+type Snapshooter[Snapshot any] interface {
+	// ToSnapshot возвращает snapshot
+	ToSnapshot() Snapshot
+
+	// FromSnapshot восстанавливает состояние из snapshot
+	FromSnapshot(snapshot Snapshot) error
+}

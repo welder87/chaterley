@@ -4,38 +4,30 @@ import (
 	"chaterley/internal/app/core"
 )
 
-// Message представляет сообщение из чата.
+// Message - Сообщение из Чата.
 type Message struct {
-	// id - Идентификатор сообщения
+	// id - идентификатор Сообщения
 	id core.EntityID
-	// Дата и время создания сообщения
+	// content - содержание Сообщения
+	content core.Content
+	// authorID - идентификатор Пользователя (автора) Сообщения
+	authorID core.EntityID
+	// seen - флаг прочтения Сообщения
+	seen core.Seen
+	// createdAt - дата и время создания Сообщения
 	createdAt core.CreatedAt
-	// Дата и время изменения сообщения
-	updatedAt core.UpdatedAt
-	// Дата и время удаления сообщения
+	// deletedAt - дата и время удаления Сообщения
 	deletedAt core.DeletedAt
-	// id - Автора сообщения.
-	authorId core.EntityID
-	// Флаг изменения сообщения
-	isEdited core.IsEdited
-	// Флаг прочтения сообщения
-	isReaded core.IsReaded
-	// Тело сообщения
-	content core.MessageContent
-	// Тип сообщения
-	contentType core.ContentType
 }
 
 // NewMessage создает новый экземпляр структуры Message и возвращает указатель.
 // В дальнейшем должна возвращать ошибку, если какое-то из полей невалидно.
-func NewMessage(authorId core.EntityID, content string, contentType string) *Message {
+func NewMessage(authorID core.EntityID, content string) *Message {
 	return &Message{
-		id:          core.NewEntityID(),
-		createdAt:   core.NewCreatedAt(),
-		authorId:    authorId,
-		isEdited:    core.NewIsEdited(),
-		isReaded:    core.NewIsReaded(),
-		content:     core.NewMessageContent(content),
-		contentType: core.NewContentType(contentType),
+		id:        core.NewEntityID(),
+		createdAt: core.NewCreatedAt(),
+		authorID:  authorID,
+		seen:      core.NewSeen(),
+		content:   core.NewContent(content),
 	}
 }

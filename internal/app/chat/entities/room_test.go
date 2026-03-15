@@ -37,7 +37,7 @@ func TestRoom_NewRoom_WithoutError(t *testing.T) {
 			assert.WithinDuration(t, now, room.createdAt.Val(), time.Second)
 			assert.WithinDuration(t, now, room.updatedAt.Val(), time.Second)
 			assert.Nil(t, room.deletedAt)
-			assert.Equal(t, room.members, expectedUsers)
+			assert.Equal(t, room.memberIDs, expectedUsers)
 			assert.Equal(t, room.addedMemberIds, addedUserIds)
 			assert.Equal(t, room.removedMemberIds, map[core.EntityID]struct{}{})
 			assert.Equal(t, room.changedFields, changedFields)
@@ -94,7 +94,7 @@ func TestRoom_AddMember_WithoutError(t *testing.T) {
 			name:      name,
 			createdAt: createdAt,
 			updatedAt: updatedAt,
-			members:   map[core.EntityID]User{},
+			memberIDs:   map[core.EntityID]User{},
 		}
 		user := User{
 			id:        core.NewEntityID(),
@@ -108,7 +108,7 @@ func TestRoom_AddMember_WithoutError(t *testing.T) {
 		assert.Greater(t, room.updatedAt.Val(), updatedAt.Val())
 		assert.WithinDuration(t, time.Now(), room.updatedAt.Val(), time.Second)
 		assert.Nil(t, room.deletedAt)
-		assert.Equal(t, room.members, map[core.EntityID]User{user.id: user})
+		assert.Equal(t, room.memberIDs, map[core.EntityID]User{user.id: user})
 	})
 }
 
