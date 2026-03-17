@@ -21,7 +21,3 @@ CREATE INDEX idx_message_created_at ON message(created_at);
 SELECT 'down SQL query';
 
 DROP TABLE message;
-
-DROP INDEX idx_message_content;
-DROP INDEX idx_message_author_id;
-DROP INDEX idx_message_created_at;
