@@ -4,6 +4,7 @@ SELECT 'up SQL query';
 CREATE TABLE message (
     id TEXT NOT NULL PRIMARY KEY,
     created_at TEXT NOT NULL,
+    created_at TEXT NOT NULL,
     updated_at TEXT,
     deleted_at TEXT,
     author_id TEXT NOT NULL,
