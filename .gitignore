@@ -33,3 +33,6 @@ go.work.sum
 
 # spell checkers
 .codebook.toml
+
+# db
+data/app.db
