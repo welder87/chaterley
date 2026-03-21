@@ -1,4 +1,4 @@
-package entities
+package message
 
 import (
 	"chaterley/internal/app/core"
@@ -20,14 +20,26 @@ type Message struct {
 	deletedAt core.DeletedAt
 }
 
+func (m *Message) ID() core.EntityID {
+	return m.id
+}
+
 // NewMessage создает новый экземпляр структуры Message и возвращает указатель.
 // В дальнейшем должна возвращать ошибку, если какое-то из полей невалидно.
-func NewMessage(authorID core.EntityID, content string) *Message {
+func NewMessage(authorID core.EntityID, content string) (*Message, error) {
+	newContent, err := core.NewContent(content)
+	if err != nil {
+		return nil, core.ValidationError{
+			Field: "content",
+			Code:  core.Unknown,
+			Err:   err,
+		}
+	}
 	return &Message{
 		id:        core.NewEntityID(),
 		createdAt: core.NewCreatedAt(),
 		authorID:  authorID,
 		seen:      core.NewSeen(),
-		content:   core.NewContent(content),
-	}
+		content:   newContent,
+	}, nil
 }
