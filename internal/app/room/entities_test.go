@@ -1,7 +1,8 @@
-package entities
+package room
 
 import (
 	"chaterley/internal/app/core"
+	"chaterley/internal/app/user"
 	"testing"
 	"time"
 
@@ -16,7 +17,7 @@ func TestRoom_NewRoom_WithoutError(t *testing.T) {
 			t.Parallel()
 			// GIVEN
 			users := makeUsers(2)
-			expectedUsers := make(map[core.EntityID]User, 2)
+			expectedUsers := make(map[core.EntityID[user.User]], 2)
 			addedUserIds := make(map[core.EntityID]struct{}, 2)
 			for idx := range users {
 				expectedUsers[users[idx].id] = users[idx]
@@ -94,7 +95,7 @@ func TestRoom_AddMember_WithoutError(t *testing.T) {
 			name:      name,
 			createdAt: createdAt,
 			updatedAt: updatedAt,
-			memberIDs:   map[core.EntityID]User{},
+			memberIDs: map[core.EntityID]User{},
 		}
 		user := User{
 			id:        core.NewEntityID(),
