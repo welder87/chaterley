@@ -16,8 +16,6 @@ type Message struct {
 	deletedAt core.DeletedAt
 	// id - Автора сообщения.
 	authorId core.EntityID
-	// Флаг изменения сообщения
-	isEdited core.IsEdited
 	// Флаг прочтения сообщения
 	isReaded core.IsReaded
 	// Тело сообщения
@@ -33,9 +31,31 @@ func NewMessage(authorId core.EntityID, content string, contentType string) *Mes
 		id:          core.NewEntityID(),
 		createdAt:   core.NewCreatedAt(),
 		authorId:    authorId,
-		isEdited:    core.NewIsEdited(),
 		isReaded:    core.NewIsReaded(),
 		content:     core.NewMessageContent(content),
 		contentType: core.NewContentType(contentType),
+	}
+}
+
+type MessageDTO struct {
+	ID          string
+	CreatedAt   string
+	UpdatedAt   string
+	DeletedAt   string
+	AuthorID    string
+	IsReaded    bool
+	IsEdited    bool
+	Content     string
+	ContentType string
+}
+
+func (m *Message) ToSnapshot() MessageDTO {
+	return MessageDTO{
+		ID:          m.id.String(),
+		CreatedAt:   m.createdAt.String(),
+		AuthorID:    m.authorId.String(),
+		IsReaded:    m.isReaded.Val(),
+		Content:     m.content.String(),
+		ContentType: m.contentType.String(),
 	}
 }

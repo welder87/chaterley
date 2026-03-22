@@ -12,6 +12,21 @@ type EntityID struct {
 	val uuid.UUID
 }
 
+// Equal - сравнение ID.
+func (e EntityID) Equal(other EntityID) bool {
+	return e.val == other.val
+}
+
+// Val - геттер для получения ID.
+func (e EntityID) Val() uuid.UUID {
+	return e.val
+}
+
+// String - приведение ID к строке.
+func (e EntityID) String() string {
+	return e.val.String()
+}
+
 func NewEntityID() EntityID {
 	id, err := uuid.NewV7()
 	if err != nil {
@@ -166,20 +181,22 @@ func (u DeletedAt) String() string {
 	return u.val.String()
 }
 
-type IsEdited struct {
-	val bool
-}
-
-func NewIsEdited() IsEdited {
-	return IsEdited{val: false}
-}
-
 type IsReaded struct {
 	val bool
 }
 
 func NewIsReaded() IsReaded {
 	return IsReaded{val: false}
+}
+
+// Equal - сравнение флагов прочитано.
+func (r IsReaded) Equal(other IsReaded) bool {
+	return r.val == other.val
+}
+
+// Val - геттер для получения флага прочитано.
+func (r IsReaded) Val() bool {
+	return r.val
 }
 
 type MessageContent struct {
@@ -191,6 +208,21 @@ func NewMessageContent(text string) MessageContent {
 	return MessageContent{val: text}
 }
 
+// Equal - сравнение контентов.
+func (c MessageContent) Equal(other MessageContent) bool {
+	return c.val == other.val
+}
+
+// Val - геттер для получения контента.
+func (c MessageContent) Val() string {
+	return c.val
+}
+
+// String - приведение контента к строке.
+func (c MessageContent) String() string {
+	return c.val
+}
+
 type ContentType struct {
 	val string
 }
@@ -198,4 +230,19 @@ type ContentType struct {
 func NewContentType(val string) ContentType {
 	val = strings.TrimSpace(val)
 	return ContentType{val: val}
+}
+
+// Equal - сравнение типов контента.
+func (ct ContentType) Equal(other ContentType) bool {
+	return ct.val == other.val
+}
+
+// Val - геттер для получения типа контента.
+func (ct ContentType) Val() string {
+	return ct.val
+}
+
+// String - приведение типа контента к строке.
+func (ct ContentType) String() string {
+	return ct.val
 }
