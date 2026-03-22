@@ -126,6 +126,12 @@ func NewSeen[Struct any]() Seen[Struct] {
 	return Seen[Struct]{valueObject[bool]{val: false}}
 }
 
-type Content struct {
-	val string
+type Content[Struct any] struct {
+	valueObject[string]
+}
+
+func NewContent[Struct any](content string) Content[Struct] {
+	val := strings.TrimSpace(content)
+	// тут должны быть проверки (бизнес-правила для контента сообщения)
+	return Content[Struct]{valueObject[string]{val: val}}
 }

@@ -13,27 +13,35 @@ const maxUserCount int = 100
 // Минимальное количество пользователей в Комнату.
 const minUserCount int = 2
 
+type (
+	RoomID    = core.EntityID[Room]
+	Name      = core.Name[Room]
+	CreatedAt = core.CreatedAt[Room]
+	UpdatedAt = core.UpdatedAt[Room]
+	DeletedAt = core.DeletedAt[Room]
+)
+
 // Room представляет Комнату Чата.
 // Это агрегат.
 type Room struct {
 	// id - идентификатор Комнаты
-	id core.EntityID[Room]
+	id RoomID
 	// name - наименование Комнаты
-	name core.Name[Room]
+	name Name
 	// createdAt - дата создания Комнаты
-	createdAt core.CreatedAt[Room]
+	createdAt CreatedAt
 	// updatedAt - дата обновления Комнаты
-	updatedAt core.UpdatedAt[Room]
+	updatedAt UpdatedAt
 	// deletedAt - дата удаления Комнаты
-	deletedAt *core.DeletedAt[Room]
+	deletedAt *DeletedAt
 
 	// Поля связей
 	// memberIDs - идентификаторы Пользователей (предыдущее состояние)
-	memberIDs map[core.EntityID[user.User]]struct{}
+	memberIDs map[user.UserID]struct{}
 	// addedMemberIDs - идентификатор добавленного Пользователя
-	addedMemberIDs []core.EntityID[user.User]
+	addedMemberIDs []user.UserID
 	// removedMemberIDs - идентификатор удаленного Пользователя
-	removedMemberIDs []core.EntityID[user.User]
+	removedMemberIDs []user.UserID
 	// addedMessageID - идентификатор добавленного Сообщения
 	addedMessageID *core.EntityID[message.Message]
 	// removedMessageID - идентификатор удаленного Сообщения
@@ -45,11 +53,7 @@ type Room struct {
 func NewRoom(name string) (*Room, error) {
 	newName, err := core.NewName[Room](name)
 	if err != nil {
-		return nil, core.ValidationError{
-			Field: "name",
-			Code:  core.Unknown,
-			Err:   err,
-		}
+		return nil, core.ValidationError{Field: "name", Code: core.Unknown, Err: err}
 	}
 	return &Room{
 		id:        core.NewEntityID[Room](),
@@ -61,20 +65,19 @@ func NewRoom(name string) (*Room, error) {
 
 // ChangeName - смена наименования Комнаты.
 func (r *Room) ChangeName(name string) error {
-	field := "name"
 	if r.name.Val() == name {
-		return core.ValidationError{Field: field, Code: core.NameUnchanged}
+		return core.ValidationError{Field: "name", Code: core.NameUnchanged}
 	}
 	newName, err := core.NewName[Room](name)
 	if err != nil {
 		return core.ValidationError{
-			Field: field,
+			Field: "name",
 			Code:  core.Unknown,
 			Err:   err,
 		}
 	}
 	if r.name == newName {
-		return core.ValidationError{Field: field, Code: core.NameUnchanged}
+		return core.ValidationError{Field: "name", Code: core.NameUnchanged}
 	}
 	r.name = newName
 	r.updatedAt = core.NewUpdatedAt[Room]()
@@ -82,7 +85,7 @@ func (r *Room) ChangeName(name string) error {
 }
 
 // AddMember - добавление члена Комнаты.
-func (r *Room) AddMember(memberID core.EntityID[user.User]) error {
+func (r *Room) AddMember(memberID user.UserID) error {
 	if _, ok := r.memberIDs[memberID]; ok {
 		return core.ValidationError{Field: "members", Code: core.MemberIsExists}
 	}

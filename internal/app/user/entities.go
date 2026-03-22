@@ -7,21 +7,30 @@ import (
 	"github.com/google/uuid"
 )
 
+type (
+	UserID       = core.EntityID[User]
+	CreatedAt    = core.CreatedAt[User]
+	UpdatedAt    = core.UpdatedAt[User]
+	DeletedAt    = core.DeletedAt[User]
+	Login        = core.Login[User]
+	PasswordHash = core.PasswordHash[User]
+)
+
 // User представляет пользователя чата.
 // Основная сущность доменной области Chat.
 type User struct {
 	// id - Идентификатор пользователя
-	id core.EntityID[User]
+	id UserID
 	// login - Логин пользователя
-	login core.Login
+	login Login
 	// password - Хеш пароля пользователя
-	password core.PasswordHash
+	password PasswordHash
 	// createdAt - Дата создания пользователя
-	createdAt core.CreatedAt
+	createdAt CreatedAt
 	// updatedAt - Дата обновления пользователя
-	updatedAt core.UpdatedAt
+	updatedAt UpdatedAt
 	// deletedAt - Дата удаления пользователя
-	deletedAt *core.DeletedAt
+	deletedAt *DeletedAt
 }
 
 // NewUser создает нового пользователя.
@@ -29,22 +38,26 @@ type User struct {
 func NewUser(login string, password string) *User {
 	return &User{
 		id:        core.NewEntityID[User](),
-		login:     core.NewLogin(login),
-		password:  core.NewPasswordHash(password),
-		createdAt: core.NewCreatedAt(),
-		updatedAt: core.NewUpdatedAt(),
+		login:     core.NewLogin[User](login),
+		password:  core.NewPasswordHash[User](password),
+		createdAt: core.NewCreatedAt[User](),
+		updatedAt: core.NewUpdatedAt[User](),
 	}
 }
 
 func (u *User) ToSnapshot() UserSnapshot {
-	return UserSnapshot{
+	snapshot := UserSnapshot{
 		ID:        u.id.Val(),
 		Login:     u.login.Val(),
 		Password:  u.password.Val(),
 		CreatedAt: u.createdAt.Val(),
 		UpdatedAt: u.updatedAt.Val(),
-		DeletedAt: u.deletedAt.Val(),
 	}
+	if u.deletedAt != nil {
+		deletedAt := u.deletedAt.Val()
+		snapshot.DeletedAt = &deletedAt
+	}
+	return snapshot
 }
 
 type UserSnapshot struct {
@@ -53,89 +66,11 @@ type UserSnapshot struct {
 	// Login - Логин пользователя
 	Login string
 	// Password - Хеш пароля пользователя
-	Password core.PasswordHash
+	Password string
 	// CreatedAt - Дата создания пользователя
 	CreatedAt time.Time
 	// UpdatedAt - Дата обновления пользователя
 	UpdatedAt time.Time
 	// DeletedAt - Дата удаления пользователя
-	DeletedAt time.Time
-}
-
-
-package entities
-
-import (
-	"chaterley/internal/app/core"
-)
-
-// Group представляет группу пользователя чата.
-// Отвечает за права доступа. Например, admin.
-type Group struct {
-	// id - Идентификатор группы
-	id core.EntityID
-	// name - Наименование группы
-	name core.Name
-	// createdAt - Дата создания группы
-	createdAt core.CreatedAt
-	// updatedAt - Дата обновления группы
-	updatedAt core.UpdatedAt
-	// deletedAt - Дата удаления группы
-	deletedAt core.DeletedAt
-}
-
-// NewGroup создает новую группу.
-// Возвращает ошибку core.ValidationError, если какое-то из полей невалидно.
-func NewGroup(name string) (*Group, error) {
-	newName, err := core.NewName(name)
-	if err != nil {
-		return nil, core.ValidationError{
-			Field:  "Name",
-			Reason: "Is empty",
-			Err:    err,
-		}
-	}
-	return &Group{
-		id:        core.NewEntityID(),
-		name:      newName,
-		createdAt: core.NewCreatedAt(),
-	}, nil
-}
-
-// ID - геттер для получения идентификатора группы пользователя чата.
-func (g *Group) ID() core.EntityID {
-	return g.id
-}
-
-// Name - геттер для получения наименования группы пользователя чата.
-func (g *Group) Name() core.Name {
-	return g.name
-}
-
-// SetName - сеттер для присваивания нового наименования группы пользователю чата.
-func (g *Group) SetName(name string) error {
-	newName, err := core.NewName(name)
-	if err != nil {
-		return core.ValidationError{
-			Field:  "Name",
-			Reason: "Is empty",
-			Err:    err,
-		}
-	}
-	if g.name == newName {
-		return core.ValidationError{
-			Field:  "Name",
-			Reason: "Name unchanged",
-			Err:    core.ErrNameUnchanged,
-		}
-	}
-	g.name = newName
-	g.updatedAt = core.NewUpdatedAt()
-	return nil
-}
-
-func (g *Group) Delete() error {
-	g.deletedAt = core.NewDeletedAt()
-	g.updatedAt = core.NewUpdatedAt()
-	return nil
+	DeletedAt *time.Time
 }
