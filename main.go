@@ -34,9 +34,16 @@ func main() {
 	ctx := context.Background()
 
 	// Сохранение сущности Message
-	err := repository.Save(ctx, message)
-	if err != nil {
+	errSave := repository.Save(ctx, message)
+	if errSave != nil {
 		panic("Error to save message entity.")
 	}
+
+	// Удаление сущности Message
+	errRemove := repository.Remove(ctx, message)
+	if errRemove != nil {
+		panic("Error to delete message entity.")
+	}
+
 	fmt.Println("Success!")
 }

@@ -37,6 +37,15 @@ func (r *MessageRepository) Save(ctx context.Context, entity *entities.Message) 
 }
 
 func (r *MessageRepository) Remove(ctx context.Context, entity *entities.Message) error {
+	entityDTO := entity.ToSnapshot()
+	_, err := r.dbConn.ExecContext(ctx,
+		"DELETE FROM message WHERE id=?",
+		entityDTO.ID,
+	)
+
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
