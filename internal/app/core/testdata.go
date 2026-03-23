@@ -13,9 +13,7 @@ type failedNameTestCase struct {
 
 type emptyStruct struct{}
 
-var (
-	NameZeroValue = Name[emptyStruct]{}
-)
+var NameZeroValue = Name[emptyStruct]{}
 
 var (
 	SuccessfulNameTestCases = []successfulNameTestCase{

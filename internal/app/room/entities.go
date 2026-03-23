@@ -56,10 +56,13 @@ func NewRoom(name string) (*Room, error) {
 		return nil, core.ValidationError{Field: "name", Code: core.Unknown, Err: err}
 	}
 	return &Room{
-		id:        core.NewEntityID[Room](),
-		name:      newName,
-		createdAt: core.NewCreatedAt[Room](),
-		updatedAt: core.NewUpdatedAt[Room](),
+		id:               core.NewEntityID[Room](),
+		name:             newName,
+		createdAt:        core.NewCreatedAt[Room](),
+		updatedAt:        core.NewUpdatedAt[Room](),
+		memberIDs:        make(map[user.UserID]struct{}, 1),
+		addedMemberIDs:   []user.UserID{},
+		removedMemberIDs: []user.UserID{},
 	}, nil
 }
 
