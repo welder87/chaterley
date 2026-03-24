@@ -50,8 +50,19 @@ func (r *MessageRepository) Remove(ctx context.Context, entity *entities.Message
 }
 
 func (r *MessageRepository) Get(ctx context.Context, entityID core.EntityID) (*entities.Message, error) {
-	// _ := r.dbConn.Exec(ctx, "dfasjf", entityID) -> {}
-	// sto := entities.MessageDTO {...}
-	// entities.Message.FromSnapshot(MessageDTO) -> entities.Message
-	return nil, nil
+	messageFromDB := r.dbConn.QueryRowContext(ctx,
+		"SELECT * FROM message WHERE id=?",
+		entityID.String(),
+	)
+
+	var messageDTO entities.MessageDTO
+	err := messageFromDB.Scan(
+		&messageDTO.ID, &messageDTO.CreatedAt, &messageDTO.UpdatedAt, &messageDTO.DeletedAt,
+		&messageDTO.AuthorID, &messageDTO.IsReaded, &messageDTO.ContentType, &messageDTO.Content,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return entities.NewMessageFromSnapshot(messageDTO), nil
 }

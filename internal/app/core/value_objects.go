@@ -38,6 +38,12 @@ func NewEntityID() EntityID {
 	}
 }
 
+func NewExistsEntityID(id uuid.UUID) EntityID {
+	return EntityID{
+		val: id,
+	}
+}
+
 type Login struct {
 	val string
 }
@@ -116,6 +122,10 @@ func NewCreatedAt() CreatedAt {
 	return CreatedAt{val: time.Now()}
 }
 
+func NewExistsCreatedAt(time time.Time) CreatedAt {
+	return CreatedAt{val: time}
+}
+
 // Val - геттер для получения даты создания.
 func (c CreatedAt) Val() time.Time {
 	return c.val
@@ -123,7 +133,7 @@ func (c CreatedAt) Val() time.Time {
 
 // Equal - сравнение даты создания с другой датой создания.
 func (c CreatedAt) Equal(other CreatedAt) bool {
-	return c.val == other.val
+	return c.val.Equal(other.val)
 }
 
 // String - приведение даты создания к строке.
@@ -141,6 +151,10 @@ func NewUpdatedAt() UpdatedAt {
 	return UpdatedAt{val: time.Now()}
 }
 
+func NewExistsUpdatedAt(time time.Time) UpdatedAt {
+	return UpdatedAt{val: time}
+}
+
 // Val - геттер для получения даты обновления.
 func (u UpdatedAt) Val() time.Time {
 	return u.val
@@ -148,7 +162,7 @@ func (u UpdatedAt) Val() time.Time {
 
 // Equal - сравнение даты обновления с другой датой обновления.
 func (u UpdatedAt) Equal(other UpdatedAt) bool {
-	return u.val == other.val
+	return u.val.Equal(other.val)
 }
 
 // String - приведение даты обновления к строке.
@@ -166,14 +180,18 @@ func NewDeletedAt() DeletedAt {
 	return DeletedAt{val: time.Now()}
 }
 
+func NewExistsDeleatedAt(time time.Time) DeletedAt {
+	return DeletedAt{val: time}
+}
+
 // Val - геттер для получения даты удаления.
 func (u DeletedAt) Val() time.Time {
 	return u.val
 }
 
 // Equal - сравнение даты удаления с другой датой удаления.
-func (u DeletedAt) Equal(other DeletedAt) bool {
-	return u.val == other.val
+func (d DeletedAt) Equal(other DeletedAt) bool {
+	return d.val.Equal(other.val)
 }
 
 // String - приведение даты удаления к строке.
@@ -187,6 +205,10 @@ type IsReaded struct {
 
 func NewIsReaded() IsReaded {
 	return IsReaded{val: false}
+}
+
+func NewExistsIsReaded(val bool) IsReaded {
+	return IsReaded{val: val}
 }
 
 // Equal - сравнение флагов прочитано.

@@ -8,6 +8,8 @@ import (
 	infraRepo "chaterley/internal/infrastructure/chat/entities/repositories"
 	"context"
 	"fmt"
+
+	"github.com/google/uuid"
 )
 
 func main() {
@@ -20,13 +22,13 @@ func main() {
 	var repository interRepo.Repository[entities.Message] = infraRepo.NewMessageRepository(database)
 
 	// Генерация вспомогательных данных для доменной модели Message
-	authorId := core.NewEntityID()
+	authorID := core.NewEntityID()
 	content := "test text"
 	contentType := "text"
 
 	// Создание доменной модели Message
 	message := entities.NewMessage(
-		authorId,
+		authorID,
 		content,
 		contentType,
 	)
@@ -38,6 +40,15 @@ func main() {
 	if errSave != nil {
 		panic("Error to save message entity.")
 	}
+
+	// Получение сущности Message
+	messageDTO := message.ToSnapshot()
+	messageID, _ := uuid.Parse(messageDTO.ID)
+	messageEntity, errGet := repository.Get(ctx, core.NewExistsEntityID(messageID))
+	if errGet != nil {
+		panic("Errot to get message entity.")
+	}
+	fmt.Println(messageEntity.ToSnapshot().ID)
 
 	// Удаление сущности Message
 	errRemove := repository.Remove(ctx, message)
