@@ -57,5 +57,5 @@ func TestRoom_AddMember_WithoutError(t *testing.T) {
 	assert.Greater(t, room.updatedAt.Val(), updatedAt.Val())
 	assert.WithinDuration(t, time.Now(), room.updatedAt.Val(), time.Second)
 	assert.Nil(t, room.deletedAt)
-	assert.Equal(t, room.memberIDs, map[user.UserID]struct{}{})
+	assert.Equal(t, room.memberIDs, map[user.UserID]struct{}{userID: struct{}{}})
 }

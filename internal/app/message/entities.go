@@ -28,7 +28,7 @@ type Message struct {
 	// createdAt - дата и время создания Сообщения
 	createdAt CreatedAt
 	// deletedAt - дата и время удаления Сообщения
-	deletedAt DeletedAt
+	deletedAt *DeletedAt
 }
 
 // NewMessage создает новый экземпляр структуры Message и возвращает указатель.

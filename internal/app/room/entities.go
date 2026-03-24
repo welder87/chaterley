@@ -87,27 +87,47 @@ func (r *Room) ChangeName(name string) error {
 	return nil
 }
 
+// CheckMemberCount
+func (r *Room) CheckMemberCount(memberIDs []user.UserID) error {
+	if len(memberIDs) > maxUserCount {
+		return core.ValidationError{Field: "memberIDs", Code: core.MaxMemberCount}
+	}
+	return nil
+}
+
 // AddMember - добавление члена Комнаты.
 func (r *Room) AddMember(memberID user.UserID) error {
 	if _, ok := r.memberIDs[memberID]; ok {
-		return core.ValidationError{Field: "members", Code: core.MemberIsExists}
+		return core.ValidationError{Field: "memberIDs", Code: core.MemberIsExists}
 	}
 	if len(r.memberIDs) > maxUserCount {
-		return core.ValidationError{Field: "members", Code: core.MaxMemberCount}
+		return core.ValidationError{Field: "memberIDs", Code: core.MaxMemberCount}
 	}
+	r.memberIDs[memberID] = struct{}{}
 	r.addedMemberIDs = append(r.addedMemberIDs, memberID)
 	r.updatedAt = core.NewUpdatedAt[Room]()
+	return nil
+}
+
+// AddMember - добавление члена Комнаты.
+func (r *Room) AddMembers(memberIDs []user.UserID) error {
+	for idx := range memberIDs {
+		if err := r.AddMember(memberIDs[idx]); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
 // RemoveMember - удаление члена Комнаты.
 func (r *Room) RemoveMember(memberID core.EntityID[user.User]) error {
 	if _, ok := r.memberIDs[memberID]; !ok {
-		return core.ValidationError{Field: "members", Code: core.MemberIsNotExists}
+		return core.ValidationError{Field: "memberIDs", Code: core.MemberIsNotExists}
 	}
 	if len(r.memberIDs) <= minUserCount {
-		return core.ValidationError{Field: "members", Code: core.MinMemberCount}
+		return core.ValidationError{Field: "memberIDs", Code: core.MinMemberCount}
 	}
+	delete(r.memberIDs, memberID)
 	r.removedMemberIDs = append(r.addedMemberIDs, memberID)
 	r.updatedAt = core.NewUpdatedAt[Room]()
 	return nil

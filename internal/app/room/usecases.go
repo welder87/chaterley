@@ -1,23 +1,22 @@
 package room
 
 import (
-	"chaterley/internal/app/auth/entities"
 	"chaterley/internal/app/core"
 	"chaterley/internal/app/message"
+	"chaterley/internal/app/user"
 	"context"
-	"errors"
 )
 
 type RoomUseCase struct {
-	roomRepo *core.Repository[Room]
-	userRepo *core.Repository[entities.User]
-	msgRepo  *core.Repository[message.Message]
+	roomRepo core.Repository[Room]
+	userRepo core.Repository[user.User]
+	msgRepo  core.Repository[message.Message]
 }
 
 func NewRoomUseCase(
-	roomRepo *core.Repository[Room],
-	userRepo *core.Repository[entities.User],
-	msgRepo *core.Repository[message.Message],
+	roomRepo core.Repository[Room],
+	userRepo core.Repository[user.User],
+	msgRepo core.Repository[message.Message],
 ) *RoomUseCase {
 	return &RoomUseCase{roomRepo: roomRepo, userRepo: userRepo, msgRepo: msgRepo}
 }
@@ -25,27 +24,31 @@ func NewRoomUseCase(
 func (r *RoomUseCase) CreateRoom(
 	ctx context.Context,
 	name string,
-	memberIDs []core.EntityID,
+	memberIDs []user.UserID,
 ) error {
 	room, err := NewRoom(name)
 	if err != nil {
 		return err
 	}
-	isExists, err := r.userRepo.Exists(ctx, memberID)
+	if err = room.CheckMemberCount(memberIDs); err != nil {
+		return err
+	}
+	existingUserIDs, err := r.userRepo.ExistsIds(ctx, memberIDs)
 	if err != nil {
 		return err
 	}
-	for idx := range memberIDs {
-		if err = room.AddMember(memberIDs[idx]); err != nil {
-			return err
-		}
+	if diff := r.checkDiff(memberIDs, existingUserIDs); len(diff) > 0 {
+		return core.ValidationError{Field: "memberIDs", Code: core.MemberIsNotExists}
+	}
+	if err = room.AddMembers(memberIDs); err != nil {
+		return err
 	}
 	return r.saveRoom(ctx, room)
 }
 
 func (r *RoomUseCase) ChangeRoomName(
 	ctx context.Context,
-	roomID core.EntityID,
+	roomID RoomID,
 	name string,
 ) error {
 	room, err := r.roomRepo.Get(ctx, roomID)
@@ -59,7 +62,7 @@ func (r *RoomUseCase) ChangeRoomName(
 	return r.saveRoom(ctx, room)
 }
 
-func (r *RoomUseCase) DeleteRoom(ctx context.Context, roomID core.EntityID) error {
+func (r *RoomUseCase) DeleteRoom(ctx context.Context, roomID RoomID) error {
 	room, err := r.roomRepo.Get(ctx, roomID)
 	if err != nil {
 		return err
@@ -73,8 +76,8 @@ func (r *RoomUseCase) DeleteRoom(ctx context.Context, roomID core.EntityID) erro
 
 func (r *RoomUseCase) AddMemberToRoom(
 	ctx context.Context,
-	roomID core.EntityID,
-	memberID core.EntityID,
+	roomID RoomID,
+	memberID user.UserID,
 ) error {
 	room, err := r.roomRepo.Get(ctx, roomID)
 	if err != nil {
@@ -85,7 +88,7 @@ func (r *RoomUseCase) AddMemberToRoom(
 		return err
 	}
 	if !isExists {
-		return errors.New("not exists")
+		return core.ValidationError{Field: "memberIDs", Code: core.MemberIsNotExists}
 	}
 	if err = room.AddMember(memberID); err != nil {
 		return err
@@ -95,8 +98,8 @@ func (r *RoomUseCase) AddMemberToRoom(
 
 func (r *RoomUseCase) RemoveMemberFromRoom(
 	ctx context.Context,
-	roomID core.EntityID,
-	memberID core.EntityID,
+	roomID RoomID,
+	memberID user.UserID,
 ) error {
 	room, err := r.roomRepo.Get(ctx, roomID)
 	if err != nil {
@@ -107,7 +110,7 @@ func (r *RoomUseCase) RemoveMemberFromRoom(
 		return err
 	}
 	if !isExists {
-		return errors.New("not exists")
+		return core.ValidationError{Field: "memberIDs", Code: core.MemberIsNotExists}
 	}
 	err = room.RemoveMember(memberID)
 	if err != nil {
@@ -116,52 +119,23 @@ func (r *RoomUseCase) RemoveMemberFromRoom(
 	return r.saveRoom(ctx, room)
 }
 
-func (r *RoomUseCase) AddMessage(
-	ctx context.Context,
-	roomID core.EntityID,
-	authorID core.EntityID,
-	content string,
-) error {
-	room, err := r.roomRepo.Get(ctx, roomID)
-	if err != nil {
-		return err
+func (r *RoomUseCase) checkDiff(
+	memberIDs []user.UserID,
+	existingMemberIDs map[user.UserID]struct{},
+) []user.UserID {
+	if len(existingMemberIDs) == 0 {
+		return memberIDs
 	}
-	msg, err := message.NewMessage(authorID, content)
-	if err != nil {
-		return err
+	diff := make([]user.UserID, 0, len(memberIDs))
+	for idx := range memberIDs {
+		if _, ok := existingMemberIDs[memberIDs[idx]]; !ok {
+			diff = append(diff, memberIDs[idx])
+		}
 	}
-	err = room.AddMessage(msg.ID())
-	if err != nil {
-		return err
-	}
-	return r.saveRoom(ctx, room)
+	return diff
 }
 
-func (r *RoomUseCase) RemoveMessage(
-	ctx context.Context,
-	roomID core.EntityID,
-	messageID core.EntityID,
-) error {
-	room, err := r.roomRepo.Get(ctx, roomID)
-	if err != nil {
-		return err
-	}
-	err = room.RemoveMessage(messageID)
-	if err != nil {
-		return err
-	}
-	return r.saveRoom(ctx, room)
-}
-
-func (r *RoomUseCase) GetMessages(
-	ctx context.Context,
-	name string,
-	memberIds []core.EntityID,
-) error {
-	return nil
-}
-
-func (r *RoomUseCase) saveRoom(ctx context.Context, room *ent.Room) error {
+func (r *RoomUseCase) saveRoom(ctx context.Context, room *Room) error {
 	if err := r.roomRepo.Save(ctx, room); err != nil {
 		return err
 	}
