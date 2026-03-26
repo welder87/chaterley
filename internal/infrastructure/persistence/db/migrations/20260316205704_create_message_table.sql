@@ -7,9 +7,8 @@ CREATE TABLE message (
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
     deleted_at TEXT DEFAULT NULL,
     author_id TEXT NOT NULL,
-    is_readed BOOLEAN DEFAULT false,
+    seen BOOLEAN DEFAULT false,
     content TEXT NOT NULL,
-    content_type TEXT NOT NULL DEFAULT 'text'
 );
 
 

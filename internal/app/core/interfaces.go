@@ -2,10 +2,13 @@ package core
 
 import (
 	"context"
+	"fmt"
 )
 
-type Valuer[Value any] interface {
+type Valuer[Value comparable] interface {
 	Val() Value
+	Equal(other Value) bool
+	fmt.Stringer
 }
 
 // Snapshooter - интерфейс для снимка состояния агрегата
