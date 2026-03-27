@@ -20,13 +20,12 @@ func (r *MessageRepository) Save(ctx context.Context, entity *message.Message) e
 		INSERT INTO message(
 			id,
 			created_at,
-			updated_at,
 			deleted_at,
 			author_id,
 			seen,
 			content
 		) VALUES (
-			?, ?, ?, ?, ?, ?, ?
+			?, ?, ?, ?, ?, ?
 		)
 	`
 	_, err := r.dbConn.ExecContext(ctx,
