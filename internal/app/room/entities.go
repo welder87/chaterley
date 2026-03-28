@@ -4,7 +4,6 @@ import (
 	"chaterley/internal/app/core"
 	"chaterley/internal/app/message"
 	"chaterley/internal/app/user"
-	"time"
 )
 
 // Максимальное количество пользователей в Комнате.
@@ -61,8 +60,8 @@ func NewRoom(name string) (*Room, error) {
 		createdAt:        core.NewCreatedAt[Room](),
 		updatedAt:        core.NewUpdatedAt[Room](),
 		memberIDs:        make(map[user.UserID]struct{}, 1),
-		addedMemberIDs:   []user.UserID{},
-		removedMemberIDs: []user.UserID{},
+		addedMemberIDs:   make([]user.UserID, 0, 2),
+		removedMemberIDs: make([]user.UserID, 0, 2),
 	}, nil
 }
 
@@ -156,23 +155,23 @@ func (r *Room) Delete() error {
 // ToSnapshot - сериализация состояния Комнаты.
 func (r *Room) ToSnapshot() (RoomSnapshot, error) {
 	snapshot := RoomSnapshot{
-		ID:        r.id.Val().String(),
+		ID:        r.id.String(),
 		Name:      r.name.Val(),
-		CreatedAt: r.createdAt.Val(),
-		UpdatedAt: r.updatedAt.Val(),
+		CreatedAt: r.createdAt.String(),
+		UpdatedAt: r.updatedAt.String(),
 	}
 	if r.deletedAt != nil {
-		deletedAt := r.deletedAt.Val()
+		deletedAt := r.deletedAt.String()
 		snapshot.DeletedAt = &deletedAt
 	}
 	snapshot.AddedMemberIDs = uuidsToStrings(r.addedMemberIDs)
 	snapshot.RemovedMemberIDs = uuidsToStrings(r.removedMemberIDs)
 	if r.addedMessageID != nil {
-		addedMessageID := r.addedMessageID.Val().String()
+		addedMessageID := r.addedMessageID.String()
 		snapshot.AddedMessageID = &addedMessageID
 	}
 	if r.removedMessageID != nil {
-		removedMessageID := r.removedMessageID.Val().String()
+		removedMessageID := r.removedMessageID.String()
 		snapshot.RemovedMessageID = &removedMessageID
 	}
 	return snapshot, nil
@@ -193,11 +192,11 @@ type RoomSnapshot struct {
 	// Name - наименование Комнаты
 	Name string
 	// CreatedAt - дата создания Комнаты
-	CreatedAt time.Time
+	CreatedAt string
 	// UpdatedAt - дата обновления Комнаты
-	UpdatedAt time.Time
+	UpdatedAt string
 	// DeletedAt - дата удаления Комнаты
-	DeletedAt *time.Time
+	DeletedAt *string
 	// AddedMemberIDs - идентификаторы добавленных пользователей в Комнату.
 	AddedMemberIDs []string
 	// RemovedMemberIDs - идентификаторы удаленных пользователей из Комнаты.

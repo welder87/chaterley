@@ -41,7 +41,7 @@ type ValidationError struct {
 }
 
 func (e ValidationError) Error() string {
-	return fmt.Sprintf("validation failed on %s: %s", e.Field, e.Code)
+	return fmt.Sprintf("validation failed on %s: %d", e.Field, e.Code)
 }
 
 func (e ValidationError) Unwrap() error {

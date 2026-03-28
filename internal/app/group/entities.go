@@ -9,7 +9,7 @@ type (
 	GroupCreatedAt = core.CreatedAt[Group]
 	GroupUpdatedAt = core.UpdatedAt[Group]
 	GroupDeletedAt = core.DeletedAt[Group]
-	Name           = core.Name[Group]
+	GroupName      = core.Name[Group]
 )
 
 // Group представляет группу пользователя чата.
@@ -18,7 +18,7 @@ type Group struct {
 	// id - Идентификатор группы
 	id GroupID
 	// name - Наименование группы
-	name Name
+	name GroupName
 	// createdAt - Дата создания группы
 	createdAt GroupCreatedAt
 	// updatedAt - Дата обновления группы
