@@ -1,0 +1,16 @@
+version: "2"
+
+linters:
+  disable:
+    - arangolint
+    - wsl
+
+formatters:
+  enable:
+      - goimports
+      - golines
+      - gofumpt
+  settings:
+      golines:
+         max-len: 88
+         shorten-comments: true
