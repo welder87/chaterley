@@ -11,9 +11,9 @@ type failedNameTestCase struct {
 	Err  error
 }
 
-var (
-	NameZeroValue = Name{val: ""}
-)
+type emptyStruct struct{}
+
+var NameZeroValue = Name[emptyStruct]{}
 
 var (
 	SuccessfulNameTestCases = []successfulNameTestCase{
