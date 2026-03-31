@@ -20,18 +20,20 @@ func (r *MessageRepository) Save(ctx context.Context, entity *message.Message) e
 		INSERT INTO message(
 			id,
 			created_at,
+			updated_at,
 			deleted_at,
 			author_id,
 			seen,
 			content
 		) VALUES (
-			?, ?, ?, ?, ?, ?
+			?, ?, ?, ?, ?, ?, ?
 		)
 	`
 	_, err := r.dbConn.ExecContext(ctx,
 		query,
 		entityDTO.ID,
 		entityDTO.CreatedAt,
+		entityDTO.UpdatedAt,
 		entityDTO.DeletedAt,
 		entityDTO.AuthorID,
 		entityDTO.Seen,
@@ -69,6 +71,7 @@ func (r *MessageRepository) Get(ctx context.Context, entityID message.MessageID)
 	err := messageFromDB.Scan(
 		&messageDTO.ID,
 		&messageDTO.CreatedAt,
+		&messageDTO.UpdatedAt,
 		&messageDTO.DeletedAt,
 		&messageDTO.AuthorID,
 		&messageDTO.Seen,

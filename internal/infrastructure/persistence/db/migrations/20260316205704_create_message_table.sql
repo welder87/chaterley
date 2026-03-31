@@ -4,6 +4,7 @@ SELECT 'up SQL query';
 CREATE TABLE message (
     id TEXT NOT NULL PRIMARY KEY,
     created_at TEXT NOT NULL,
+    updated_at TEXT DEFAULT NULL,
     deleted_at TEXT DEFAULT NULL,
     author_id TEXT NOT NULL,
     seen BOOLEAN DEFAULT false,
