@@ -10,6 +10,7 @@ type MessageID = core.EntityID[Message]
 type (
 	GroupID   = core.EntityID[Message]
 	CreatedAt = core.CreatedAt[Message]
+	UpdatedAt = core.UpdatedAt[Message]
 	DeletedAt = core.DeletedAt[Message]
 	Content   = core.Content[Message]
 	Seen      = core.Seen[Message]
@@ -27,6 +28,8 @@ type Message struct {
 	seen Seen
 	// createdAt - дата и время создания Сообщения
 	createdAt CreatedAt
+	// updatedAt - дата и время обновления Сообщения
+	updatedAt UpdatedAt
 	// deletedAt - дата и время удаления Сообщения
 	deletedAt *DeletedAt
 }
@@ -38,6 +41,7 @@ func NewMessage(authorID user.UserID, content string) (*Message, error) {
 	return &Message{
 		id:        core.NewEntityID[Message](),
 		createdAt: core.NewCreatedAt[Message](),
+		updatedAt: UpdatedAt(core.NewUpdatedAt[Message]()),
 		authorID:  authorID,
 		seen:      core.NewSeen[Message](),
 		content:   newContent,
@@ -47,6 +51,7 @@ func NewMessage(authorID user.UserID, content string) (*Message, error) {
 type MessageSnapshot struct {
 	ID        string
 	CreatedAt string
+	UpdatedAt string
 	DeletedAt *string
 	AuthorID  string
 	Seen      bool
@@ -78,6 +83,10 @@ func NewMessageFromSnapshot(snapshot MessageSnapshot) (*Message, error) {
 	if err != nil {
 		return &emptyMessage, err
 	}
+	updatedAt, err := core.NewExistsUpdatedAt[Message](snapshot.UpdatedAt)
+	if err != nil {
+		return &emptyMessage, err
+	}
 	deletedAt, err := core.NewExistsDeletedAt[Message](*snapshot.DeletedAt)
 	if err != nil {
 		return &emptyMessage, err
@@ -89,6 +98,7 @@ func NewMessageFromSnapshot(snapshot MessageSnapshot) (*Message, error) {
 	return &Message{
 		id:        messageID,
 		createdAt: createdAt,
+		updatedAt: updatedAt,
 		deletedAt: &deletedAt,
 		seen:      core.NewExistsSeen[Message](snapshot.Seen),
 		content:   core.NewContent[Message](snapshot.Content),
