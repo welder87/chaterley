@@ -2,7 +2,6 @@ package user
 
 import (
 	"chaterley/internal/app/core"
-	"time"
 
 	"github.com/google/uuid"
 )
@@ -50,11 +49,11 @@ func (u *User) ToSnapshot() UserSnapshot {
 		ID:        u.id.Val(),
 		Login:     u.login.Val(),
 		Password:  u.password.Val(),
-		CreatedAt: u.createdAt.Val(),
-		UpdatedAt: u.updatedAt.Val(),
+		CreatedAt: u.createdAt.String(),
+		UpdatedAt: u.updatedAt.String(),
 	}
 	if u.deletedAt != nil {
-		deletedAt := u.deletedAt.Val()
+		deletedAt := u.deletedAt.String()
 		snapshot.DeletedAt = &deletedAt
 	}
 	return snapshot
@@ -68,9 +67,46 @@ type UserSnapshot struct {
 	// Password - Хеш пароля пользователя
 	Password string
 	// CreatedAt - Дата создания пользователя
-	CreatedAt time.Time
+	CreatedAt string
 	// UpdatedAt - Дата обновления пользователя
-	UpdatedAt time.Time
+	UpdatedAt string
 	// DeletedAt - Дата удаления пользователя
-	DeletedAt *time.Time
+	DeletedAt *string
+}
+
+func NewUserFromSnapshot(snapshot UserSnapshot) (*User, error) {
+	emptyUser := User{}
+	id, err := core.NewExistsEntityID[User](snapshot.ID.String())
+	if err != nil {
+		return &emptyUser, nil
+	}
+	login, err := core.NewExistsLogin[User](snapshot.Login)
+	if err != nil {
+		return &emptyUser, err
+	}
+	password, err := core.NewExistsPasswordHash[User](snapshot.Password)
+	if err != nil {
+		return &emptyUser, err
+	}
+	createdAt, err := core.NewExistsCreatedAt[User](snapshot.CreatedAt)
+	if err != nil {
+		return &emptyUser, err
+	}
+	updatedAt, err := core.NewExistsUpdatedAt[User](snapshot.UpdatedAt)
+	if err != nil {
+		return &emptyUser, err
+	}
+	deletedAt, err := core.NewExistsDeletedAt[User](*snapshot.DeletedAt)
+	if err != nil {
+		return &emptyUser, err
+	}
+
+	return &User{
+		id:        id,
+		login:     login,
+		password:  password,
+		createdAt: createdAt,
+		updatedAt: updatedAt,
+		deletedAt: &deletedAt,
+	}, nil
 }
