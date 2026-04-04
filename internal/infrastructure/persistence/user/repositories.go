@@ -10,16 +10,20 @@ type UserRepository struct {
 	dbConn *sql.DB
 }
 
+func NewUserRepository(dbConn *sql.DB) *UserRepository {
+	return &UserRepository{dbConn: dbConn}
+}
+
 func (r *UserRepository) Save(ctx context.Context, entity *user.User) error {
 	entityDTO := entity.ToSnapshot()
 	query := `
 		INSERT INTO user(
-			user_id,
+			id,
 			login,
 			password,
 			created_at,
 			updated_at,
-			deleted_at,
+			deleted_at
 		)
 		VALUES(
 			?, ?, ?, ?, ?, ?
@@ -44,7 +48,7 @@ func (r *UserRepository) Save(ctx context.Context, entity *user.User) error {
 func (r *UserRepository) Remove(ctx context.Context, entity *user.User) error {
 	entityDTO := entity.ToSnapshot()
 	query := `
-		DELETE FROM USER WHERE user_id=?
+		DELETE FROM USER WHERE id=?
 	`
 	_, err := r.dbConn.ExecContext(
 		ctx,
@@ -66,11 +70,11 @@ func (r *UserRepository) Get(ctx context.Context, entityID user.UserID) (*user.U
 	var userDTO user.UserSnapshot
 	err := userFromDB.Scan(
 		&userDTO.ID,
+		&userDTO.Login,
+		&userDTO.Password,
 		&userDTO.CreatedAt,
 		&userDTO.UpdatedAt,
 		&userDTO.DeletedAt,
-		&userDTO.Login,
-		&userDTO.Password,
 	)
 	if err != nil {
 		return nil, err

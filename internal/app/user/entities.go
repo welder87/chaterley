@@ -2,8 +2,6 @@ package user
 
 import (
 	"chaterley/internal/app/core"
-
-	"github.com/google/uuid"
 )
 
 type (
@@ -46,7 +44,7 @@ func NewUser(login string, password string) *User {
 
 func (u *User) ToSnapshot() UserSnapshot {
 	snapshot := UserSnapshot{
-		ID:        u.id.Val(),
+		ID:        u.id.String(),
 		Login:     u.login.Val(),
 		Password:  u.password.Val(),
 		CreatedAt: u.createdAt.String(),
@@ -61,7 +59,7 @@ func (u *User) ToSnapshot() UserSnapshot {
 
 type UserSnapshot struct {
 	// ID - Идентификатор пользователя
-	ID uuid.UUID
+	ID string
 	// Login - Логин пользователя
 	Login string
 	// Password - Хеш пароля пользователя
@@ -76,7 +74,7 @@ type UserSnapshot struct {
 
 func NewUserFromSnapshot(snapshot UserSnapshot) (*User, error) {
 	emptyUser := User{}
-	id, err := core.NewExistsEntityID[User](snapshot.ID.String())
+	id, err := core.NewExistsEntityID[User](snapshot.ID)
 	if err != nil {
 		return &emptyUser, nil
 	}
