@@ -95,6 +95,10 @@ func NewLogin[Struct any](login string) Login[Struct] {
 	return Login[Struct]{valueObject[string]{val: login}}
 }
 
+func NewExistsLogin[Struct any](login string) (Login[Struct], error) {
+	return Login[Struct]{valueObject[string]{val: login}}, nil
+}
+
 type PasswordHash[Struct any] struct {
 	valueObject[string]
 }
@@ -104,6 +108,10 @@ func NewPasswordHash[Struct any](password string) PasswordHash[Struct] {
 	// тут должны быть проверки (бизнес-правила для пароля) с хешированием
 	// мы не должны хранить входной val, только хеш, но пока и так норм
 	return PasswordHash[Struct]{valueObject[string]{val: val}}
+}
+
+func NewExistsPasswordHash[Struct any](password string) (PasswordHash[Struct], error) {
+	return PasswordHash[Struct]{valueObject[string]{val: password}}, nil
 }
 
 // CreatedAt - дата создания.
