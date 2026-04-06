@@ -94,17 +94,21 @@ func NewUserFromSnapshot(snapshot UserSnapshot) (*User, error) {
 	if err != nil {
 		return &emptyUser, err
 	}
-	deletedAt, err := core.NewExistsDeletedAt[User](*snapshot.DeletedAt)
-	if err != nil {
-		return &emptyUser, err
-	}
 
+	var deletedAt *core.DeletedAt[User]
+	if snapshot.DeletedAt != nil {
+		val, err := core.NewExistsDeletedAt[User](*snapshot.DeletedAt)
+		if err != nil {
+			return &emptyUser, err
+		}
+		deletedAt = &val
+	}
 	return &User{
 		id:        id,
 		login:     login,
 		password:  password,
 		createdAt: createdAt,
 		updatedAt: updatedAt,
-		deletedAt: &deletedAt,
+		deletedAt: deletedAt,
 	}, nil
 }

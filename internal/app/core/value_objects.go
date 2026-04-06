@@ -119,6 +119,11 @@ type CreatedAt[Struct any] struct {
 	valueObject[time.Time]
 }
 
+// String - приведение даты к строке.
+func (с CreatedAt[Value]) String() string {
+	return с.Val().Format(time.RFC3339)
+}
+
 // NewCreatedAt - получение даты создания.
 func NewCreatedAt[Struct any]() CreatedAt[Struct] {
 	return CreatedAt[Struct]{valueObject[time.Time]{val: time.Now()}}
@@ -137,6 +142,11 @@ type UpdatedAt[Struct any] struct {
 	valueObject[time.Time]
 }
 
+// String - приведение даты к строке.
+func (u UpdatedAt[Value]) String() string {
+	return u.Val().Format(time.RFC3339)
+}
+
 // NewUpdatedAt - получение даты обновления.
 func NewUpdatedAt[Struct any]() UpdatedAt[Struct] {
 	return UpdatedAt[Struct]{valueObject[time.Time]{val: time.Now()}}
@@ -153,6 +163,11 @@ func NewExistsUpdatedAt[Struct any](val string) (UpdatedAt[Struct], error) {
 // DeletedAt - дата удаления.
 type DeletedAt[Struct any] struct {
 	valueObject[time.Time]
+}
+
+// String - приведение даты к строке.
+func (d DeletedAt[Value]) String() string {
+	return d.Val().Format(time.RFC3339)
 }
 
 // NewDeletedAt - получение даты удаления.
