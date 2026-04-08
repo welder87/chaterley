@@ -15,6 +15,14 @@ type valueObject[Value comparable] struct {
 	val Value
 }
 
+type timeValueObject struct {
+	valueObject[time.Time]
+}
+
+func (vo timeValueObject) String() string {
+	return vo.val.Format(time.RFC3339Nano)
+}
+
 func (vo valueObject[Value]) Val() Value {
 	return vo.val
 }
@@ -95,6 +103,10 @@ func NewLogin[Struct any](login string) Login[Struct] {
 	return Login[Struct]{valueObject[string]{val: login}}
 }
 
+func NewExistsLogin[Struct any](login string) (Login[Struct], error) {
+	return Login[Struct]{valueObject[string]{val: login}}, nil
+}
+
 type PasswordHash[Struct any] struct {
 	valueObject[string]
 }
@@ -106,58 +118,87 @@ func NewPasswordHash[Struct any](password string) PasswordHash[Struct] {
 	return PasswordHash[Struct]{valueObject[string]{val: val}}
 }
 
+func NewExistsPasswordHash[Struct any](password string) (PasswordHash[Struct], error) {
+	return PasswordHash[Struct]{valueObject[string]{val: password}}, nil
+}
+
 // CreatedAt - дата создания.
 type CreatedAt[Struct any] struct {
-	valueObject[time.Time]
+	timeValueObject
 }
 
 // NewCreatedAt - получение даты создания.
 func NewCreatedAt[Struct any]() CreatedAt[Struct] {
-	return CreatedAt[Struct]{valueObject[time.Time]{val: time.Now()}}
+	return CreatedAt[Struct]{
+		timeValueObject: timeValueObject{
+			valueObject[time.Time]{val: time.Now()},
+		},
+	}
 }
 
 func NewExistsCreatedAt[Struct any](val string) (CreatedAt[Struct], error) {
-	date_time, err := time.Parse(time.RFC3339, val)
+	date_time, err := time.Parse(time.RFC3339Nano, val)
 	if err != nil {
-		return CreatedAt[Struct]{valueObject[time.Time]{}}, err
+		return CreatedAt[Struct]{
+			timeValueObject: timeValueObject{
+				valueObject[time.Time]{},
+			}}, err
 	}
-	return CreatedAt[Struct]{valueObject[time.Time]{val: date_time}}, nil
+	return CreatedAt[Struct]{
+		timeValueObject: timeValueObject{
+			valueObject[time.Time]{val: date_time},
+		}}, nil
 }
 
 // UpdatedAt - дата обновления.
 type UpdatedAt[Struct any] struct {
-	valueObject[time.Time]
+	timeValueObject
 }
 
 // NewUpdatedAt - получение даты обновления.
 func NewUpdatedAt[Struct any]() UpdatedAt[Struct] {
-	return UpdatedAt[Struct]{valueObject[time.Time]{val: time.Now()}}
+	return UpdatedAt[Struct]{
+		timeValueObject: timeValueObject{
+			valueObject[time.Time]{val: time.Now()},
+		}}
 }
 
 func NewExistsUpdatedAt[Struct any](val string) (UpdatedAt[Struct], error) {
-	date_time, err := time.Parse(time.RFC3339, val)
+	date_time, err := time.Parse(time.RFC3339Nano, val)
 	if err != nil {
-		return UpdatedAt[Struct]{valueObject[time.Time]{}}, err
+		return UpdatedAt[Struct]{
+			timeValueObject: timeValueObject{
+				valueObject[time.Time]{}}}, err
 	}
-	return UpdatedAt[Struct]{valueObject[time.Time]{val: date_time}}, nil
+	return UpdatedAt[Struct]{
+		timeValueObject: timeValueObject{
+			valueObject[time.Time]{val: date_time},
+		}}, nil
 }
 
 // DeletedAt - дата удаления.
 type DeletedAt[Struct any] struct {
-	valueObject[time.Time]
+	timeValueObject
 }
 
 // NewDeletedAt - получение даты удаления.
 func NewDeletedAt[Struct any]() DeletedAt[Struct] {
-	return DeletedAt[Struct]{valueObject[time.Time]{val: time.Now()}}
+	return DeletedAt[Struct]{
+		timeValueObject: timeValueObject{
+			valueObject[time.Time]{val: time.Now()},
+		}}
 }
 
 func NewExistsDeletedAt[Struct any](val string) (DeletedAt[Struct], error) {
-	date_time, err := time.Parse(time.RFC3339, val)
+	date_time, err := time.Parse(time.RFC3339Nano, val)
 	if err != nil {
-		return DeletedAt[Struct]{valueObject[time.Time]{}}, err
+		return DeletedAt[Struct]{
+			timeValueObject: timeValueObject{
+				valueObject[time.Time]{}}}, err
 	}
-	return DeletedAt[Struct]{valueObject[time.Time]{val: date_time}}, nil
+	return DeletedAt[Struct]{
+		timeValueObject: timeValueObject{
+			valueObject[time.Time]{val: date_time}}}, nil
 }
 
 type Seen[Struct any] struct {
