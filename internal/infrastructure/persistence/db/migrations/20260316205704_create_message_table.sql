@@ -8,7 +8,8 @@ CREATE TABLE message (
     deleted_at TEXT DEFAULT NULL,
     author_id TEXT NOT NULL,
     seen BOOLEAN DEFAULT false,
-    content TEXT NOT NULL
+    content TEXT NOT NULL,
+    FOREIGN KEY(author_id) REFERENCES user(id) ON DELETE CASCADE
 );
 
 

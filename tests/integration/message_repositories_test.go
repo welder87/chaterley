@@ -25,7 +25,31 @@ func (s *MessageRepositoryIntegrationSuite) SetupTest() {
 
 func (s *MessageRepositoryIntegrationSuite) Test_Get_WithoutError() {
 	ctx := context.Background()
-	query := `
+	userSnapshot := testutil.NewUserSnapshotFixture()
+	userQuery := `
+		INSERT INTO user(
+			id,
+			login,
+			password,
+			created_at,
+			updated_at,
+			deleted_at
+		)
+		VALUES(
+			?, ?, ?, ?, ?, ?
+		)
+	`
+	_, err := s.db.ExecContext(ctx,
+		userQuery,
+		userSnapshot.ID,
+		userSnapshot.Login,
+		userSnapshot.Password,
+		userSnapshot.CreatedAt,
+		userSnapshot.UpdatedAt,
+		nil,
+	)
+	s.Require().NoError(err)
+	messageQuery := `
 		INSERT INTO message(
 			id,
 			created_at,
@@ -38,25 +62,26 @@ func (s *MessageRepositoryIntegrationSuite) Test_Get_WithoutError() {
 			?, ?, ?, ?, ?, ?, ?
 		)
 	`
-	snapshot := testutil.NewMessageSnapshotFixture()
-	entityID, err := core.NewExistsEntityID[message.Message](snapshot.ID)
-	s.Require().NoError(err)
+	messageSnapshot := testutil.NewMessageSnapshotFixture()
+	messageSnapshot.AuthorID = userSnapshot.ID
 	_, err = s.db.ExecContext(ctx,
-		query,
-		snapshot.ID,
-		snapshot.CreatedAt,
-		snapshot.UpdatedAt,
+		messageQuery,
+		messageSnapshot.ID,
+		messageSnapshot.CreatedAt,
+		messageSnapshot.UpdatedAt,
 		nil,
-		snapshot.AuthorID,
-		snapshot.Seen,
-		snapshot.Content,
+		messageSnapshot.AuthorID,
+		messageSnapshot.Seen,
+		messageSnapshot.Content,
 	)
 	s.Require().NoError(err)
-	ans, err := s.repo.Get(ctx, entityID)
+	messageID, err := core.NewExistsEntityID[message.Message](messageSnapshot.ID)
 	s.Require().NoError(err)
-	s.Equal(ans.ID(), entityID)
+	ans, err := s.repo.Get(ctx, messageID)
+	s.Require().NoError(err)
+	s.Equal(ans.ID(), messageID)
 	s2 := ans.ToSnapshot()
-	s.Equal(snapshot, &s2)
+	s.Equal(messageSnapshot, &s2)
 }
 
 func (s *MessageRepositoryIntegrationSuite) Test_Get_WithError() {

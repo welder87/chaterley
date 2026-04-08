@@ -49,24 +49,10 @@ func (s *BaseIntegrationSuite) unApplyMigrations() {
 	s.Require().NoError(err)
 }
 
-// // Выполняется перед КАЖДЫМ тестом
 func (s *BaseIntegrationSuite) SetupTest() {
 	s.T().Log("Setup Test")
 }
 
-// // Выполняется после КАЖДОГО теста
 func (s *BaseIntegrationSuite) TearDownTest() {
 	s.T().Log("Teardown Test")
 }
-
-// // Сам тест
-// func (s *IntegrationTestSuite) TestSomething() {
-// 	resp, err := s.app.Get("/api/something")
-// 	s.Require().NoError(err)
-// 	s.Equal(200, resp.StatusCode)
-// }
-
-// // Функция запуска suite
-// func TestIntegrationSuite(t *testing.T) {
-// 	suite.Run(t, new(IntegrationTestSuite))
-// }
