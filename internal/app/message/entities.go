@@ -41,11 +41,15 @@ func NewMessage(authorID user.UserID, content string) (*Message, error) {
 	return &Message{
 		id:        core.NewEntityID[Message](),
 		createdAt: core.NewCreatedAt[Message](),
-		updatedAt: UpdatedAt(core.NewUpdatedAt[Message]()),
+		updatedAt: core.NewUpdatedAt[Message](),
 		authorID:  authorID,
 		seen:      core.NewSeen[Message](),
 		content:   newContent,
 	}, nil
+}
+
+func (m *Message) ID() MessageID {
+	return m.id
 }
 
 type MessageSnapshot struct {
@@ -62,6 +66,7 @@ func (m *Message) ToSnapshot() MessageSnapshot {
 	snapshot := MessageSnapshot{
 		ID:        m.id.String(),
 		CreatedAt: m.createdAt.String(),
+		UpdatedAt: m.updatedAt.String(),
 		AuthorID:  m.authorID.String(),
 		Seen:      m.seen.Val(),
 		Content:   m.content.String(),
@@ -87,9 +92,13 @@ func NewMessageFromSnapshot(snapshot MessageSnapshot) (*Message, error) {
 	if err != nil {
 		return &emptyMessage, err
 	}
-	deletedAt, err := core.NewExistsDeletedAt[Message](*snapshot.DeletedAt)
-	if err != nil {
-		return &emptyMessage, err
+	var deletedAt *DeletedAt = nil
+	if snapshot.DeletedAt != nil {
+		newDeletedAt, err := core.NewExistsDeletedAt[Message](*(snapshot.DeletedAt))
+		if err != nil {
+			return &emptyMessage, err
+		}
+		deletedAt = &newDeletedAt
 	}
 	authorID, err := core.NewExistsEntityID[user.User](snapshot.AuthorID)
 	if err != nil {
@@ -99,7 +108,7 @@ func NewMessageFromSnapshot(snapshot MessageSnapshot) (*Message, error) {
 		id:        messageID,
 		createdAt: createdAt,
 		updatedAt: updatedAt,
-		deletedAt: &deletedAt,
+		deletedAt: deletedAt,
 		seen:      core.NewExistsSeen[Message](snapshot.Seen),
 		content:   core.NewContent[Message](snapshot.Content),
 		authorID:  authorID,
