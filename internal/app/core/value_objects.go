@@ -2,10 +2,12 @@ package core
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 	"unicode/utf8"
 
+	argonize "github.com/KEINOS/go-argonize"
 	"github.com/google/uuid"
 )
 
@@ -107,19 +109,64 @@ func NewExistsLogin[Struct any](login string) (Login[Struct], error) {
 	return Login[Struct]{valueObject[string]{val: login}}, nil
 }
 
+type Password[Struct any] struct {
+	valueObject[string]
+}
+
+func NewPassword[Struct any](password string) (Password[Struct], error) {
+	val := strings.TrimSpace(password)
+	if len(val) < 8 {
+		return Password[Struct]{}, ErrPasswordLength
+	}
+	return Password[Struct]{valueObject[string]{val: val}}, nil
+}
+
 type PasswordHash[Struct any] struct {
 	valueObject[string]
 }
 
-func NewPasswordHash[Struct any](password string) PasswordHash[Struct] {
-	val := strings.TrimSpace(password)
-	// тут должны быть проверки (бизнес-правила для пароля) с хешированием
-	// мы не должны хранить входной val, только хеш, но пока и так норм
-	return PasswordHash[Struct]{valueObject[string]{val: val}}
+func NewPasswordHash[Struct any](password string, salt argonize.Salt) (PasswordHash[Struct], error) {
+	bytePassword := []byte(password)
+	params := argonize.NewParams()
+
+	paper := []byte(os.Getenv("PASSWORD_PEPER"))
+	salt.AddPepper(paper)
+	hashedObj := argonize.HashCustom(bytePassword, salt, params)
+	if !hashedObj.IsValidPassword(bytePassword) {
+		return PasswordHash[Struct]{}, ErrGenPasswordHashed
+	}
+
+	return PasswordHash[Struct]{valueObject[string]{val: hashedObj.String()}}, nil
 }
 
 func NewExistsPasswordHash[Struct any](password string) (PasswordHash[Struct], error) {
 	return PasswordHash[Struct]{valueObject[string]{val: password}}, nil
+}
+
+// Соль для хэширования пароля
+type PasswordSalt[Struct any] struct {
+	val argonize.Salt
+}
+
+func (ps PasswordSalt[any]) String() string {
+	return string(ps.val)
+}
+
+func (ps PasswordSalt[any]) Val() argonize.Salt {
+	return ps.val
+}
+
+func NewPasswordSalt[Struct any]() (PasswordSalt[Struct], error) {
+	params := argonize.NewParams()
+	salt, err := argonize.NewSalt(params.SaltLength)
+	if err != nil {
+		return PasswordSalt[Struct]{}, ErrGenPasswordSalt
+	}
+	return PasswordSalt[Struct]{val: salt}, nil
+}
+
+func NewExistsPasswordSalt[Struct any](passwordSalt string) (PasswordSalt[Struct], error) {
+	return PasswordSalt[Struct]{val: []byte(passwordSalt)}, nil
 }
 
 // CreatedAt - дата создания.

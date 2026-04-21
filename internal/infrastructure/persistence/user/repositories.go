@@ -21,12 +21,13 @@ func (r *UserRepository) Save(ctx context.Context, entity *user.User) error {
 			id,
 			login,
 			password,
+			password_salt,
 			created_at,
 			updated_at,
 			deleted_at
 		)
 		VALUES(
-			?, ?, ?, ?, ?, ?
+			?, ?, ?, ?, ?, ?, ?
 		)
 	`
 	_, err := r.dbConn.ExecContext(
@@ -35,6 +36,7 @@ func (r *UserRepository) Save(ctx context.Context, entity *user.User) error {
 		entityDTO.ID,
 		entityDTO.Login,
 		entityDTO.Password,
+		entityDTO.PasswordSalt,
 		entityDTO.CreatedAt,
 		entityDTO.UpdatedAt,
 		entityDTO.DeletedAt,
@@ -72,6 +74,7 @@ func (r *UserRepository) Get(ctx context.Context, entityID user.UserID) (*user.U
 		&userDTO.ID,
 		&userDTO.Login,
 		&userDTO.Password,
+		&userDTO.PasswordSalt,
 		&userDTO.CreatedAt,
 		&userDTO.UpdatedAt,
 		&userDTO.DeletedAt,

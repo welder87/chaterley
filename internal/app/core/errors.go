@@ -16,6 +16,9 @@ const (
 	MinMemberCount
 	MemberIsExists
 	MemberIsNotExists
+	PasswordLength
+	GenPasswordSalt
+	GenPasswordHash
 	Unknown
 )
 
@@ -32,6 +35,9 @@ var (
 	ErrMinMemberCount    = errors.New("min member count")
 	ErrMemberIsExists    = errors.New("member is exists")
 	ErrMemberIsNotExists = errors.New("member is not exists")
+	ErrPasswordLength    = errors.New("password length less than minimum simbols count")
+	ErrGenPasswordSalt   = errors.New("generate salt is not possible")
+	ErrGenPasswordHashed = errors.New("generate hash is not possible")
 )
 
 type ValidationError struct {
@@ -60,5 +66,8 @@ var errorsByCode = []error{
 	MinMemberCount:    ErrMinMemberCount,
 	MemberIsExists:    ErrMemberIsExists,
 	MemberIsNotExists: ErrMemberIsNotExists,
+	PasswordLength:    ErrPasswordLength,
+	GenPasswordSalt:   ErrGenPasswordSalt,
+	GenPasswordHash:   ErrGenPasswordHashed,
 	Unknown:           nil,
 }

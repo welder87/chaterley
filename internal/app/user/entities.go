@@ -11,6 +11,7 @@ type (
 	DeletedAt    = core.DeletedAt[User]
 	Login        = core.Login[User]
 	PasswordHash = core.PasswordHash[User]
+	PasswordSalt = core.PasswordSalt[User]
 )
 
 // User представляет пользователя чата.
@@ -22,6 +23,8 @@ type User struct {
 	login Login
 	// password - Хеш пароля пользователя
 	password PasswordHash
+	// passwordSalt - Соль для хэширования пароля пользователя
+	passwordSalt PasswordSalt
 	// createdAt - Дата создания пользователя
 	createdAt CreatedAt
 	// updatedAt - Дата обновления пользователя
@@ -32,23 +35,27 @@ type User struct {
 
 // NewUser создает нового пользователя.
 // В дальнейшем должна возвращать ошибку, если какое-то из полей невалидно.
-func NewUser(login string, password string) *User {
+func NewUser(login string, password string) (*User, error) {
+	passwordSalt, _ := core.NewPasswordSalt[User]()
+	hashedPassword, _ := core.NewPasswordHash[User](password, passwordSalt.Val())
 	return &User{
-		id:        core.NewEntityID[User](),
-		login:     core.NewLogin[User](login),
-		password:  core.NewPasswordHash[User](password),
-		createdAt: core.NewCreatedAt[User](),
-		updatedAt: core.NewUpdatedAt[User](),
-	}
+		id:           core.NewEntityID[User](),
+		login:        core.NewLogin[User](login),
+		password:     hashedPassword,
+		passwordSalt: passwordSalt,
+		createdAt:    core.NewCreatedAt[User](),
+		updatedAt:    core.NewUpdatedAt[User](),
+	}, nil
 }
 
 func (u *User) ToSnapshot() UserSnapshot {
 	snapshot := UserSnapshot{
-		ID:        u.id.String(),
-		Login:     u.login.Val(),
-		Password:  u.password.Val(),
-		CreatedAt: u.createdAt.String(),
-		UpdatedAt: u.updatedAt.String(),
+		ID:           u.id.String(),
+		Login:        u.login.Val(),
+		Password:     u.password.Val(),
+		PasswordSalt: u.passwordSalt.String(),
+		CreatedAt:    u.createdAt.String(),
+		UpdatedAt:    u.updatedAt.String(),
 	}
 	if u.deletedAt != nil {
 		deletedAt := u.deletedAt.String()
@@ -64,6 +71,8 @@ type UserSnapshot struct {
 	Login string
 	// Password - Хеш пароля пользователя
 	Password string
+	// PasswordSalt - Соль для хэширования пароля пользователя
+	PasswordSalt string
 	// CreatedAt - Дата создания пользователя
 	CreatedAt string
 	// UpdatedAt - Дата обновления пользователя
@@ -86,6 +95,10 @@ func NewUserFromSnapshot(snapshot UserSnapshot) (*User, error) {
 	if err != nil {
 		return &emptyUser, err
 	}
+	passwordSalt, err := core.NewExistsPasswordSalt[User](snapshot.PasswordSalt)
+	if err != nil {
+		return &emptyUser, err
+	}
 	createdAt, err := core.NewExistsCreatedAt[User](snapshot.CreatedAt)
 	if err != nil {
 		return &emptyUser, err
@@ -104,11 +117,12 @@ func NewUserFromSnapshot(snapshot UserSnapshot) (*User, error) {
 		deletedAt = &val
 	}
 	return &User{
-		id:        id,
-		login:     login,
-		password:  password,
-		createdAt: createdAt,
-		updatedAt: updatedAt,
-		deletedAt: deletedAt,
+		id:           id,
+		login:        login,
+		password:     password,
+		passwordSalt: passwordSalt,
+		createdAt:    createdAt,
+		updatedAt:    updatedAt,
+		deletedAt:    deletedAt,
 	}, nil
 }
