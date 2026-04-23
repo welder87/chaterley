@@ -7,10 +7,10 @@ import (
 )
 
 // Максимальное количество пользователей в Комнате.
-const maxUserCount int = 100
+const MaxUserCount int = 100
 
 // Минимальное количество пользователей в Комнату.
-const minUserCount int = 2
+const MinUserCount int = 2
 
 type (
 	RoomID    = core.EntityID[Room]
@@ -60,9 +60,13 @@ func NewRoom(name string) (*Room, error) {
 		createdAt:        core.NewCreatedAt[Room](),
 		updatedAt:        core.NewUpdatedAt[Room](),
 		memberIDs:        make(map[user.UserID]struct{}, 1),
-		addedMemberIDs:   make([]user.UserID, 0, 2),
-		removedMemberIDs: make([]user.UserID, 0, 2),
+		addedMemberIDs:   make([]user.UserID, 0, MinUserCount),
+		removedMemberIDs: make([]user.UserID, 0, MinUserCount),
 	}, nil
+}
+
+func (r *Room) ID() RoomID {
+	return r.id
 }
 
 // ChangeName - смена наименования Комнаты.
@@ -88,7 +92,7 @@ func (r *Room) ChangeName(name string) error {
 
 // CheckMemberCount
 func (r *Room) CheckMemberCount(memberIDs []user.UserID) error {
-	if len(memberIDs) > maxUserCount {
+	if len(memberIDs) > MaxUserCount {
 		return core.ValidationError{Field: "memberIDs", Code: core.MaxMemberCount}
 	}
 	return nil
@@ -99,13 +103,19 @@ func (r *Room) AddMember(memberID user.UserID) error {
 	if _, ok := r.memberIDs[memberID]; ok {
 		return core.ValidationError{Field: "memberIDs", Code: core.MemberIsExists}
 	}
-	if len(r.memberIDs) > maxUserCount {
+	if len(r.memberIDs) > MaxUserCount {
 		return core.ValidationError{Field: "memberIDs", Code: core.MaxMemberCount}
 	}
 	r.memberIDs[memberID] = struct{}{}
 	r.addedMemberIDs = append(r.addedMemberIDs, memberID)
 	r.updatedAt = core.NewUpdatedAt[Room]()
 	return nil
+}
+
+// HasMember
+func (r *Room) HasMember(memberID user.UserID) bool {
+	_, ok := r.memberIDs[memberID]
+	return ok
 }
 
 // AddMember - добавление члена Комнаты.
@@ -123,7 +133,7 @@ func (r *Room) RemoveMember(memberID core.EntityID[user.User]) error {
 	if _, ok := r.memberIDs[memberID]; !ok {
 		return core.ValidationError{Field: "memberIDs", Code: core.MemberIsNotExists}
 	}
-	if len(r.memberIDs) <= minUserCount {
+	if len(r.memberIDs) <= MinUserCount {
 		return core.ValidationError{Field: "memberIDs", Code: core.MinMemberCount}
 	}
 	delete(r.memberIDs, memberID)
@@ -203,4 +213,39 @@ type RoomSnapshot struct {
 	RemovedMemberIDs []string
 	AddedMessageID   *string
 	RemovedMessageID *string
+}
+
+func NewRoomFromSnapshot(snapshot RoomSnapshot) (*Room, error) {
+	emptyMessage := Room{}
+	messageID, err := core.NewExistsEntityID[Room](snapshot.ID)
+	if err != nil {
+		return &emptyMessage, err
+	}
+	name, err := core.NewExistsName[Room](snapshot.Name)
+	if err != nil {
+		return &emptyMessage, err
+	}
+	createdAt, err := core.NewExistsCreatedAt[Room](snapshot.CreatedAt)
+	if err != nil {
+		return &emptyMessage, err
+	}
+	updatedAt, err := core.NewExistsUpdatedAt[Room](snapshot.UpdatedAt)
+	if err != nil {
+		return &emptyMessage, err
+	}
+	var deletedAt *DeletedAt = nil
+	if snapshot.DeletedAt != nil {
+		newDeletedAt, err := core.NewExistsDeletedAt[Room](*(snapshot.DeletedAt))
+		if err != nil {
+			return &emptyMessage, err
+		}
+		deletedAt = &newDeletedAt
+	}
+	return &Room{
+		id:        messageID,
+		name:      name,
+		createdAt: createdAt,
+		updatedAt: updatedAt,
+		deletedAt: deletedAt,
+	}, nil
 }

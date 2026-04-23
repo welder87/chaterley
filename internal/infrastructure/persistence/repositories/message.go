@@ -1,4 +1,4 @@
-package message
+package repositories
 
 import (
 	"chaterley/internal/app/message"
@@ -81,4 +81,19 @@ func (r *MessageRepository) Get(ctx context.Context, entityID message.MessageID)
 		return nil, err
 	}
 	return message.NewMessageFromSnapshot(messageDTO)
+}
+
+func (r *MessageRepository) GetAll(ctx context.Context) ([]*message.Message, error) {
+	return nil, nil
+}
+
+func (r *MessageRepository) Exists(ctx context.Context, entityID message.MessageID) (bool, error) {
+	return true, nil
+}
+
+func (r *MessageRepository) ExistsIds(
+	ctx context.Context,
+	entityIDs []message.MessageID,
+) (map[message.MessageID]struct{}, error) {
+	return nil, nil
 }

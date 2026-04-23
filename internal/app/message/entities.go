@@ -36,13 +36,17 @@ type Message struct {
 
 // NewMessage создает новый экземпляр структуры Message и возвращает указатель.
 // В дальнейшем должна возвращать ошибку, если какое-то из полей невалидно.
-func NewMessage(authorID user.UserID, content string) (*Message, error) {
+func NewMessage(authorID string, content string) (*Message, error) {
 	newContent := core.NewContent[Message](content)
+	newAuthorID, err := core.NewExistsEntityID[user.User](authorID)
+	if err != nil {
+		return &Message{}, err
+	}
 	return &Message{
 		id:        core.NewEntityID[Message](),
 		createdAt: core.NewCreatedAt[Message](),
 		updatedAt: core.NewUpdatedAt[Message](),
-		authorID:  authorID,
+		authorID:  newAuthorID,
 		seen:      core.NewSeen[Message](),
 		content:   newContent,
 	}, nil

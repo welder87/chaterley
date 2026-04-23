@@ -21,6 +21,10 @@ func NewRoomUseCase(
 	return &RoomUseCase{roomRepo: roomRepo, userRepo: userRepo, msgRepo: msgRepo}
 }
 
+func (r *RoomUseCase) GetRooms(ctx context.Context) ([]*Room, error) {
+	return r.roomRepo.GetAll(ctx)
+}
+
 func (r *RoomUseCase) CreateRoom(
 	ctx context.Context,
 	name string,
