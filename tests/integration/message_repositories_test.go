@@ -5,7 +5,7 @@ package integration_test
 import (
 	"chaterley/internal/app/core"
 	message "chaterley/internal/app/message"
-	message_repo "chaterley/internal/infrastructure/persistence/message"
+	message_repo "chaterley/internal/infrastructure/persistence/repositories"
 	"chaterley/tests/testutil"
 	"context"
 	"testing"
