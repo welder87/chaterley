@@ -8,11 +8,12 @@ import (
 )
 
 type RoomRepository struct {
-	dbConn *sql.DB
+	writeDbConn *sql.DB
+	readDbConn  *sql.DB
 }
 
-func NewRoomRepository(dbConn *sql.DB) *RoomRepository {
-	return &RoomRepository{dbConn: dbConn}
+func NewRoomRepository(writeDbConn, readDbConn *sql.DB) *RoomRepository {
+	return &RoomRepository{writeDbConn: writeDbConn, readDbConn: readDbConn}
 }
 
 func (r *RoomRepository) Save(ctx context.Context, entity *room.Room) error {
@@ -28,7 +29,7 @@ func (r *RoomRepository) Get(ctx context.Context, entityID room.RoomID) (*room.R
 }
 
 func (r *RoomRepository) GetAll(ctx context.Context) ([]*room.Room, error) {
-	stmt, err := r.dbConn.PrepareContext(ctx, "SELECT * FROM room")
+	stmt, err := r.readDbConn.PrepareContext(ctx, "SELECT * FROM room")
 	rows, err := stmt.QueryContext(ctx, 0)
 	if err != nil {
 		return nil, fmt.Errorf("query error: %w", err)

@@ -20,7 +20,7 @@ type MessageRepositoryIntegrationSuite struct {
 
 func (s *MessageRepositoryIntegrationSuite) SetupTest() {
 	s.BaseIntegrationSuite.SetupTest()
-	s.repo = message_repo.NewMessageRepository(s.db)
+	s.repo = message_repo.NewMessageRepository(s.db, s.db)
 }
 
 func (s *MessageRepositoryIntegrationSuite) Test_Get_WithoutError() {
@@ -56,10 +56,9 @@ func (s *MessageRepositoryIntegrationSuite) Test_Get_WithoutError() {
 			updated_at,
 			deleted_at,
 			author_id,
-			seen,
 			content
 		) VALUES (
-			?, ?, ?, ?, ?, ?, ?
+			?, ?, ?, ?, ?, ?
 		)
 	`
 	messageSnapshot := testutil.NewMessageSnapshotFixture()
@@ -71,7 +70,6 @@ func (s *MessageRepositoryIntegrationSuite) Test_Get_WithoutError() {
 		messageSnapshot.UpdatedAt,
 		nil,
 		messageSnapshot.AuthorID,
-		messageSnapshot.Seen,
 		messageSnapshot.Content,
 	)
 	s.Require().NoError(err)

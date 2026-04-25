@@ -7,11 +7,12 @@ import (
 )
 
 type MessageRepository struct {
-	dbConn *sql.DB
+	writeDbConn *sql.DB
+	readDbConn  *sql.DB
 }
 
-func NewMessageRepository(dbConn *sql.DB) *MessageRepository {
-	return &MessageRepository{dbConn: dbConn}
+func NewMessageRepository(writeDbConn, readDbConn *sql.DB) *MessageRepository {
+	return &MessageRepository{writeDbConn: writeDbConn, readDbConn: readDbConn}
 }
 
 func (r *MessageRepository) Save(ctx context.Context, entity *message.Message) error {
@@ -23,20 +24,20 @@ func (r *MessageRepository) Save(ctx context.Context, entity *message.Message) e
 			updated_at,
 			deleted_at,
 			author_id,
-			seen,
+			room_id,
 			content
 		) VALUES (
 			?, ?, ?, ?, ?, ?, ?
 		)
 	`
-	_, err := r.dbConn.ExecContext(ctx,
+	_, err := r.writeDbConn.ExecContext(ctx,
 		query,
 		entityDTO.ID,
 		entityDTO.CreatedAt,
 		entityDTO.UpdatedAt,
 		entityDTO.DeletedAt,
 		entityDTO.AuthorID,
-		entityDTO.Seen,
+		entityDTO.RoomID,
 		entityDTO.Content,
 	)
 
@@ -49,7 +50,7 @@ func (r *MessageRepository) Save(ctx context.Context, entity *message.Message) e
 
 func (r *MessageRepository) Remove(ctx context.Context, entity *message.Message) error {
 	entityDTO := entity.ToSnapshot()
-	_, err := r.dbConn.ExecContext(
+	_, err := r.writeDbConn.ExecContext(
 		ctx,
 		"DELETE FROM message WHERE id=?",
 		entityDTO.ID,
@@ -62,7 +63,7 @@ func (r *MessageRepository) Remove(ctx context.Context, entity *message.Message)
 }
 
 func (r *MessageRepository) Get(ctx context.Context, entityID message.MessageID) (*message.Message, error) {
-	messageFromDB := r.dbConn.QueryRowContext(ctx,
+	messageFromDB := r.readDbConn.QueryRowContext(ctx,
 		"SELECT * FROM message WHERE id=?",
 		entityID.String(),
 	)
@@ -74,26 +75,10 @@ func (r *MessageRepository) Get(ctx context.Context, entityID message.MessageID)
 		&messageDTO.UpdatedAt,
 		&messageDTO.DeletedAt,
 		&messageDTO.AuthorID,
-		&messageDTO.Seen,
 		&messageDTO.Content,
 	)
 	if err != nil {
 		return nil, err
 	}
 	return message.NewMessageFromSnapshot(messageDTO)
-}
-
-func (r *MessageRepository) GetAll(ctx context.Context) ([]*message.Message, error) {
-	return nil, nil
-}
-
-func (r *MessageRepository) Exists(ctx context.Context, entityID message.MessageID) (bool, error) {
-	return true, nil
-}
-
-func (r *MessageRepository) ExistsIds(
-	ctx context.Context,
-	entityIDs []message.MessageID,
-) (map[message.MessageID]struct{}, error) {
-	return nil, nil
 }

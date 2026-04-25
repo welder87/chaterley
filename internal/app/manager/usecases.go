@@ -63,9 +63,17 @@ func (m *Manager) LeaveRoom(userID user.UserID) {
 
 func (m *Manager) SaveMessage(
 	ctx context.Context,
+	AuthorID string,
 	payload SentMessagePayload,
 ) (*message.Message, error) {
-	return m.msgUseCase.Create(ctx, payload.AuthorID, payload.Content)
+	return m.msgUseCase.Create(
+		ctx,
+		message.MessageDTO{
+			RoomID:   payload.RoomID,
+			AuthorID: AuthorID,
+			Content:  payload.Content,
+		},
+	)
 }
 
 func (m *Manager) Broadcast(msg *message.Message) {

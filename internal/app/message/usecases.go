@@ -15,17 +15,16 @@ func NewMessageUseCase(msgRepo core.Repository[Message]) *MessageUseCase {
 
 func (uc *MessageUseCase) Create(
 	ctx context.Context,
-	authorID string,
-	content string,
+	msg MessageDTO,
 ) (*Message, error) {
-	msg, err := NewMessage(authorID, content)
+	newMsg, err := NewMessage(msg.RoomID, msg.AuthorID, msg.Content)
 	if err != nil {
-		return &Message{}, err
+		return newMsg, err
 	}
-	if err := uc.msgRepo.Save(ctx, msg); err != nil {
-		return &Message{}, err
+	if err := uc.msgRepo.Save(ctx, newMsg); err != nil {
+		return newMsg, err
 	}
-	return msg, nil
+	return newMsg, nil
 }
 
 func (uc *MessageUseCase) Delete(ctx context.Context, msgID MessageID) error {
@@ -37,4 +36,10 @@ func (uc *MessageUseCase) Delete(ctx context.Context, msgID MessageID) error {
 		return err
 	}
 	return nil
+}
+
+type MessageDTO struct {
+	RoomID   string
+	AuthorID string
+	Content  string
 }

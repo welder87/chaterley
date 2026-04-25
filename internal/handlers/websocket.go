@@ -43,7 +43,7 @@ func (h *WebSocketHandler) Handle(ctx context.Context) fiber.Handler {
 				if err := json.Unmarshal(msg.Payload, &payload); err != nil {
 					log.Printf("recv: %s", err)
 				}
-				msg, err := h.manager.SaveMessage(ctx, payload)
+				msg, err := h.manager.SaveMessage(ctx, payload.AuthorID, payload)
 				if err != nil {
 					log.Printf("recv: %s", err)
 				}

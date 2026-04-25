@@ -2,12 +2,11 @@ package room
 
 import (
 	"chaterley/internal/app/core"
-	"chaterley/internal/app/message"
 	"chaterley/internal/app/user"
 )
 
 // Максимальное количество пользователей в Комнате.
-const MaxUserCount int = 100
+const MaxUserCount int = 50
 
 // Минимальное количество пользователей в Комнату.
 const MinUserCount int = 2
@@ -41,10 +40,6 @@ type Room struct {
 	addedMemberIDs []user.UserID
 	// removedMemberIDs - идентификатор удаленного Пользователя
 	removedMemberIDs []user.UserID
-	// addedMessageID - идентификатор добавленного Сообщения
-	addedMessageID *core.EntityID[message.Message]
-	// removedMessageID - идентификатор удаленного Сообщения
-	removedMessageID *core.EntityID[message.Message]
 }
 
 // NewRoom создает новую Комнату.
@@ -142,19 +137,6 @@ func (r *Room) RemoveMember(memberID core.EntityID[user.User]) error {
 	return nil
 }
 
-// AddMessage
-func (r *Room) AddMessage(messageID core.EntityID[message.Message]) error {
-	r.addedMessageID = &messageID
-	r.updatedAt = core.NewUpdatedAt[Room]()
-	return nil
-}
-
-func (r *Room) RemoveMessage(messageID core.EntityID[message.Message]) error {
-	r.removedMessageID = &messageID
-	r.updatedAt = core.NewUpdatedAt[Room]()
-	return nil
-}
-
 // Delete - удаление Комнаты.
 func (r *Room) Delete() error {
 	deletedAt := core.NewDeletedAt[Room]()
@@ -176,18 +158,10 @@ func (r *Room) ToSnapshot() (RoomSnapshot, error) {
 	}
 	snapshot.AddedMemberIDs = uuidsToStrings(r.addedMemberIDs)
 	snapshot.RemovedMemberIDs = uuidsToStrings(r.removedMemberIDs)
-	if r.addedMessageID != nil {
-		addedMessageID := r.addedMessageID.String()
-		snapshot.AddedMessageID = &addedMessageID
-	}
-	if r.removedMessageID != nil {
-		removedMessageID := r.removedMessageID.String()
-		snapshot.RemovedMessageID = &removedMessageID
-	}
 	return snapshot, nil
 }
 
-func uuidsToStrings(memberIDs []core.EntityID[user.User]) []string {
+func uuidsToStrings(memberIDs []user.UserID) []string {
 	ids := make([]string, 0, len(memberIDs))
 	for idx := range memberIDs {
 		ids = append(ids, memberIDs[idx].Val().String())
@@ -211,8 +185,6 @@ type RoomSnapshot struct {
 	AddedMemberIDs []string
 	// RemovedMemberIDs - идентификаторы удаленных пользователей из Комнаты.
 	RemovedMemberIDs []string
-	AddedMessageID   *string
-	RemovedMessageID *string
 }
 
 func NewRoomFromSnapshot(snapshot RoomSnapshot) (*Room, error) {

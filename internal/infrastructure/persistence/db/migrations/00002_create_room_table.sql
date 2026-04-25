@@ -11,3 +11,5 @@ CREATE TABLE room(
 
 -- +goose Down
 SELECT 'down SQL query';
+
+DROP TABLE room;

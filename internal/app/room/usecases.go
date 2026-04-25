@@ -2,23 +2,20 @@ package room
 
 import (
 	"chaterley/internal/app/core"
-	"chaterley/internal/app/message"
 	"chaterley/internal/app/user"
 	"context"
 )
 
 type RoomUseCase struct {
-	roomRepo core.Repository[Room]
-	userRepo core.Repository[user.User]
-	msgRepo  core.Repository[message.Message]
+	roomRepo core.ExtendedRepository[Room]
+	userRepo core.ExtendedRepository[user.User]
 }
 
 func NewRoomUseCase(
-	roomRepo core.Repository[Room],
-	userRepo core.Repository[user.User],
-	msgRepo core.Repository[message.Message],
+	roomRepo core.ExtendedRepository[Room],
+	userRepo core.ExtendedRepository[user.User],
 ) *RoomUseCase {
-	return &RoomUseCase{roomRepo: roomRepo, userRepo: userRepo, msgRepo: msgRepo}
+	return &RoomUseCase{roomRepo: roomRepo, userRepo: userRepo}
 }
 
 func (r *RoomUseCase) GetRooms(ctx context.Context) ([]*Room, error) {
