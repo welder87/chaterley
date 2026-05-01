@@ -1,0 +1,11 @@
+<h1>Чат</h1>
+
+{{if .Error}}
+    <div class="error">{{.Error}}</div>
+{{end}}
+
+<form method="POST" action="/login">
+    <input type="text" name="username" placeholder="Имя пользователя" required>
+    <input type="password" name="password" placeholder="Пароль" required>
+    <button type="submit">Войти</button>
+</form>

@@ -12,7 +12,7 @@ import (
 type Manager struct {
 	roomUseCase *room.RoomUseCase
 	msgUseCase  *message.MessageUseCase
-	rooms       map[room.RoomID]*room.Room
+	Rooms       map[room.RoomID]*room.Room
 	connections map[user.UserID]Session
 	mu          sync.RWMutex
 }
@@ -21,7 +21,7 @@ func NewManager(roomUseCase *room.RoomUseCase, msgUseCase *message.MessageUseCas
 	return &Manager{
 		roomUseCase: roomUseCase,
 		msgUseCase:  msgUseCase,
-		rooms:       make(map[room.RoomID]*room.Room, 2),
+		Rooms:       make(map[room.RoomID]*room.Room, 2),
 		connections: make(map[user.UserID]Session, room.MinUserCount),
 	}
 }
@@ -34,7 +34,7 @@ func (m *Manager) LoadRooms(ctx context.Context) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	for _, room := range rooms {
-		m.rooms[room.ID()] = room
+		m.Rooms[room.ID()] = room
 	}
 	return nil
 }
@@ -42,7 +42,7 @@ func (m *Manager) LoadRooms(ctx context.Context) error {
 func (m *Manager) JoinRoom(roomID room.RoomID, userID user.UserID, session Session) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	cur, ok := m.rooms[roomID]
+	cur, ok := m.Rooms[roomID]
 	if !ok {
 		return errors.New("No room")
 	}

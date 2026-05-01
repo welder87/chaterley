@@ -28,10 +28,5 @@ type Repository[Entity any] interface {
 
 type ExtendedRepository[Entity any] interface {
 	Repository[Entity]
-	Exists(ctx context.Context, entityID EntityID[Entity]) (bool, error)
 	GetAll(ctx context.Context) ([]*Entity, error)
-	ExistsIds(
-		ctx context.Context,
-		entityIDs []EntityID[Entity],
-	) (map[EntityID[Entity]]struct{}, error)
 }

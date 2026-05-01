@@ -8,8 +8,8 @@ import (
 // Максимальное количество пользователей в Комнате.
 const MaxUserCount int = 50
 
-// Минимальное количество пользователей в Комнату.
-const MinUserCount int = 2
+// Минимальное количество пользователей в Комнате.
+const MinUserCount int = 1
 
 type (
 	RoomID    = core.EntityID[Room]
@@ -37,9 +37,9 @@ type Room struct {
 	// memberIDs - идентификаторы Пользователей (предыдущее состояние)
 	memberIDs map[user.UserID]struct{}
 	// addedMemberIDs - идентификатор добавленного Пользователя
-	addedMemberIDs []user.UserID
+	addedMemberID *user.UserID
 	// removedMemberIDs - идентификатор удаленного Пользователя
-	removedMemberIDs []user.UserID
+	removedMemberID *user.UserID
 }
 
 // NewRoom создает новую Комнату.
@@ -50,13 +50,11 @@ func NewRoom(name string) (*Room, error) {
 		return nil, core.ValidationError{Field: "name", Code: core.Unknown, Err: err}
 	}
 	return &Room{
-		id:               core.NewEntityID[Room](),
-		name:             newName,
-		createdAt:        core.NewCreatedAt[Room](),
-		updatedAt:        core.NewUpdatedAt[Room](),
-		memberIDs:        make(map[user.UserID]struct{}, 1),
-		addedMemberIDs:   make([]user.UserID, 0, MinUserCount),
-		removedMemberIDs: make([]user.UserID, 0, MinUserCount),
+		id:        core.NewEntityID[Room](),
+		name:      newName,
+		createdAt: core.NewCreatedAt[Room](),
+		updatedAt: core.NewUpdatedAt[Room](),
+		memberIDs: make(map[user.UserID]struct{}, MinUserCount),
 	}, nil
 }
 
@@ -102,7 +100,7 @@ func (r *Room) AddMember(memberID user.UserID) error {
 		return core.ValidationError{Field: "memberIDs", Code: core.MaxMemberCount}
 	}
 	r.memberIDs[memberID] = struct{}{}
-	r.addedMemberIDs = append(r.addedMemberIDs, memberID)
+	r.addedMemberID = &memberID
 	r.updatedAt = core.NewUpdatedAt[Room]()
 	return nil
 }
@@ -113,18 +111,8 @@ func (r *Room) HasMember(memberID user.UserID) bool {
 	return ok
 }
 
-// AddMember - добавление члена Комнаты.
-func (r *Room) AddMembers(memberIDs []user.UserID) error {
-	for idx := range memberIDs {
-		if err := r.AddMember(memberIDs[idx]); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // RemoveMember - удаление члена Комнаты.
-func (r *Room) RemoveMember(memberID core.EntityID[user.User]) error {
+func (r *Room) RemoveMember(memberID user.UserID) error {
 	if _, ok := r.memberIDs[memberID]; !ok {
 		return core.ValidationError{Field: "memberIDs", Code: core.MemberIsNotExists}
 	}
@@ -132,7 +120,7 @@ func (r *Room) RemoveMember(memberID core.EntityID[user.User]) error {
 		return core.ValidationError{Field: "memberIDs", Code: core.MinMemberCount}
 	}
 	delete(r.memberIDs, memberID)
-	r.removedMemberIDs = append(r.addedMemberIDs, memberID)
+	r.removedMemberID = &memberID
 	r.updatedAt = core.NewUpdatedAt[Room]()
 	return nil
 }
@@ -156,17 +144,15 @@ func (r *Room) ToSnapshot() (RoomSnapshot, error) {
 		deletedAt := r.deletedAt.String()
 		snapshot.DeletedAt = &deletedAt
 	}
-	snapshot.AddedMemberIDs = uuidsToStrings(r.addedMemberIDs)
-	snapshot.RemovedMemberIDs = uuidsToStrings(r.removedMemberIDs)
-	return snapshot, nil
-}
-
-func uuidsToStrings(memberIDs []user.UserID) []string {
-	ids := make([]string, 0, len(memberIDs))
-	for idx := range memberIDs {
-		ids = append(ids, memberIDs[idx].Val().String())
+	if r.addedMemberID != nil {
+		memberID := r.addedMemberID.String()
+		snapshot.AddedMemberID = &memberID
 	}
-	return ids
+	if r.removedMemberID != nil {
+		memberID := r.removedMemberID.String()
+		snapshot.RemovedMemberID = &memberID
+	}
+	return snapshot, nil
 }
 
 // RoomSnapshot - структура данных - состояние Комнаты, на момент сериализации.
@@ -181,10 +167,10 @@ type RoomSnapshot struct {
 	UpdatedAt string
 	// DeletedAt - дата удаления Комнаты
 	DeletedAt *string
-	// AddedMemberIDs - идентификаторы добавленных пользователей в Комнату.
-	AddedMemberIDs []string
-	// RemovedMemberIDs - идентификаторы удаленных пользователей из Комнаты.
-	RemovedMemberIDs []string
+	// AddedMemberIDs - идентификатор добавленного пользователя в Комнату.
+	AddedMemberID *string
+	// RemovedMemberIDs - идентификатор удаленного пользователя из Комнаты.
+	RemovedMemberID *string
 }
 
 func NewRoomFromSnapshot(snapshot RoomSnapshot) (*Room, error) {

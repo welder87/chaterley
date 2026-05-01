@@ -1,0 +1,16 @@
+
+<div class="user-info">
+    Привет, <strong>{{.Username}}</strong>!
+    <a href="/logout">Выйти</a>
+</div>
+
+<h1>Комнаты</h1>
+<ol>
+{{range .Rooms}}
+    <li>
+        <div class="room">
+            <a href="/rooms/{{.RoomID}}">#{{.Name}}</a>
+        </div>
+    </li>
+{{end}}
+</ol>

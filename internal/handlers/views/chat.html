@@ -1,0 +1,59 @@
+{{define "chat.html"}}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Чат: {{.Room}}</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 50px auto; }
+        .messages { height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+        .message { margin: 5px 0; }
+        .username { font-weight: bold; color: blue; }
+        .time { font-size: 10px; color: gray; margin-left: 10px; }
+        input { width: 80%; padding: 10px; }
+        button { padding: 10px; }
+        .nav { margin-bottom: 20px; }
+    </style>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
+</head>
+<body>
+    <div class="nav">
+        <a href="/rooms">← Все комнаты</a>
+        <span style="float: right;">Пользователь: {{.Username}}</span>
+    </div>
+
+    <h1>Комната: #{{.Room}}</h1>
+
+    <div hx-ext="ws" ws-connect="/ws/{{.Room}}?username={{.Username}}">
+        <div id="messages" class="messages">
+            {{range .Messages}}
+                <div class="message">
+                    <span class="username">{{.Username}}:</span>
+                    <span class="content">{{.Content}}</span>
+                    <span class="time">{{.Time}}</span>
+                </div>
+            {{end}}
+        </div>
+
+        <form ws-send>
+            <input type="text" name="text" placeholder="Сообщение..." autofocus>
+            <input type="hidden" name="username" value="{{.Username}}">
+            <input type="hidden" name="room" value="{{.Room}}">
+            <button type="submit">Отправить</button>
+        </form>
+    </div>
+
+    <script>
+        // Скролл вниз при загрузке
+        var msgs = document.getElementById('messages');
+        msgs.scrollTop = msgs.scrollHeight;
+
+        // Обновляем скролл при новых сообщениях
+        var observer = new MutationObserver(function() {
+            msgs.scrollTop = msgs.scrollHeight;
+        });
+        observer.observe(msgs, { childList: true });
+    </script>
+</body>
+</html>
+{{end}}

@@ -21,8 +21,8 @@ func TestRoom_NewRoom_WithoutError(t *testing.T) {
 			assert.WithinDuration(t, now, room.updatedAt.Val(), time.Second)
 			assert.Nil(t, room.deletedAt)
 			assert.Equal(t, room.memberIDs, map[user.UserID]struct{}{})
-			assert.Equal(t, room.addedMemberIDs, []user.UserID{})
-			assert.Equal(t, room.removedMemberIDs, []user.UserID{})
+			assert.Nil(t, room.addedMemberID)
+			assert.Nil(t, room.removedMemberID)
 		})
 	}
 }

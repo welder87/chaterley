@@ -82,18 +82,3 @@ func (r *UserRepository) Get(ctx context.Context, entityID user.UserID) (*user.U
 	}
 	return user.NewUserFromSnapshot(userDTO)
 }
-
-func (r *UserRepository) GetAll(ctx context.Context) ([]*user.User, error) {
-	return nil, nil
-}
-
-func (r *UserRepository) Exists(ctx context.Context, entityID user.UserID) (bool, error) {
-	return true, nil
-}
-
-func (r *UserRepository) ExistsIds(
-	ctx context.Context,
-	entityIDs []user.UserID,
-) (map[user.UserID]struct{}, error) {
-	return nil, nil
-}

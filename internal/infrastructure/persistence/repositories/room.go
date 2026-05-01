@@ -17,7 +17,75 @@ func NewRoomRepository(writeDbConn, readDbConn *sql.DB) *RoomRepository {
 }
 
 func (r *RoomRepository) Save(ctx context.Context, entity *room.Room) error {
-	return nil
+	tx, err := r.writeDbConn.BeginTx(ctx, nil)
+	defer tx.Rollback()
+	if err != nil {
+		return err
+	}
+	entityDTO, err := entity.ToSnapshot()
+	if err != nil {
+		return err
+	}
+	query := `
+		INSERT INTO room(
+			id,
+			name,
+			created_at,
+			updated_at,
+			deleted_at,
+		) VALUES (
+			?, ?, ?, ?, ?
+		) ON CONFLICT(id)
+		DO UPDATE SET
+			name = excluded.name,
+			updated_at = excluded.updated_at,
+			deleted_at = excluded.deleted_at,
+	`
+	_, err = r.writeDbConn.ExecContext(ctx,
+		query,
+		entityDTO.ID,
+		entityDTO.Name,
+		entityDTO.CreatedAt,
+		entityDTO.UpdatedAt,
+		entityDTO.DeletedAt,
+	)
+	if err != nil {
+		return err
+	}
+	if entityDTO.AddedMemberID != nil {
+		query = `
+			INSERT INTO room_user(
+				room_id,
+				user_id,
+			) VALUES (
+				?, ?
+			) ON CONFLICT(room_id, user_id)
+			DO NOTHING
+		`
+		_, err = r.writeDbConn.ExecContext(ctx,
+			query,
+			entityDTO.ID,
+			entityDTO.AddedMemberID,
+		)
+		if err != nil {
+			return err
+		}
+	}
+	if entityDTO.RemovedMemberID != nil {
+		query = `
+			DELETE FROM room_user
+			WHERE room_id = ? AND user_id = ?
+		`
+		_, err = r.writeDbConn.ExecContext(ctx,
+			query,
+			entityDTO.ID,
+			entityDTO.RemovedMemberID,
+		)
+		if err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
 }
 
 func (r *RoomRepository) Remove(ctx context.Context, entity *room.Room) error {
@@ -55,12 +123,4 @@ func (r *RoomRepository) GetAll(ctx context.Context) ([]*room.Room, error) {
 		rooms = append(rooms, exRoom)
 	}
 	return rooms, nil
-}
-
-func (r *RoomRepository) Exists(ctx context.Context, entityID room.RoomID) (bool, error) {
-	return true, nil
-}
-
-func (r *RoomRepository) ExistsIds(ctx context.Context, entityIDs []room.RoomID) (map[room.RoomID]struct{}, error) {
-	return nil, nil
 }
