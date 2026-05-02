@@ -3,17 +3,22 @@ package handlers
 import (
 	"chaterley/internal/app/core"
 	"chaterley/internal/app/manager"
+	"chaterley/internal/app/message"
 	"chaterley/internal/app/room"
 
 	"github.com/gofiber/fiber/v3"
 )
 
 type RoomHandler struct {
-	manager *manager.Manager
+	manager                *manager.Manager
+	loadLastMessagesByRoom message.LoadLastMessagesByRoom
 }
 
-func NewRoomHandler(m *manager.Manager) *RoomHandler {
-	return &RoomHandler{manager: m}
+func NewRoomHandler(
+	m *manager.Manager,
+	loadLastMessagesByRoom message.LoadLastMessagesByRoom,
+) *RoomHandler {
+	return &RoomHandler{manager: m, loadLastMessagesByRoom: loadLastMessagesByRoom}
 }
 
 func (h *RoomHandler) Handle(c fiber.Ctx) error {
@@ -39,9 +44,14 @@ func (h *RoomHandler) Handle(c fiber.Ctx) error {
 	if err != nil {
 		c.Redirect().To("/404")
 	}
+	messages, err := h.loadLastMessagesByRoom(c.Context(), newRoomID)
+	if err != nil {
+		c.Redirect().To("/404")
+	}
 	return c.Render("room", fiber.Map{
 		"Username": "zzz",
 		"ID":       roomData.ID,
 		"Name":     roomData.Name,
+		"Messages": messages,
 	}, "layout")
 }

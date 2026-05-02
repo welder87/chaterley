@@ -6,6 +6,7 @@ import (
 	"chaterley/internal/app/room"
 	"chaterley/internal/handlers"
 	"chaterley/internal/infrastructure/persistence/db"
+	"chaterley/internal/infrastructure/persistence/queries"
 	"chaterley/internal/infrastructure/persistence/repositories"
 	"context"
 	"log"
@@ -59,10 +60,9 @@ func main() {
 	app.Post("/login", handlers.HandleLogin)
 	// app.Get("/logout", handleLogout)
 	showRooms := handlers.NewRoomsHandler(mgr)
-	showRoom := handlers.NewRoomHandler(mgr)
+	showRoom := handlers.NewRoomHandler(mgr, queries.NewLoadLastMessagesByRoom(readConn, 10))
 	app.Get("/rooms/:room_id", showRoom.Handle)
 	app.Get("/rooms", showRooms.Handle)
-	// app.Get("/chat/:room", showChat)
 	app.Get("/ws", wsHandler.Handle(ctx))
 	app.Get("/404", handlers.Handle404)
 	log.Fatal(app.Listen(":3000"))

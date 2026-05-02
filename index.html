@@ -6,59 +6,5 @@
     <body>
         <h2>Простой чат</h2>
 
-        <div
-            id="messages"
-            style="
-                height: 300px;
-                overflow: auto;
-                border: 1px solid #ccc;
-                padding: 10px;
-            "
-        ></div>
-
-        <input
-            type="text"
-            id="input"
-            placeholder="Введите сообщение..."
-            style="width: 70%"
-        />
-        <button onclick="send()">Отправить</button>
-
-        <script>
-            // Подключаемся к серверу
-            let ws = new WebSocket("ws://localhost:3000/ws");
-
-            // Получаем сообщение
-            ws.onmessage = (event) => {
-                let messages = document.getElementById("messages");
-                messages.innerHTML += "<div>→ " + event.data + "</div>";
-                messages.scrollTop = messages.scrollHeight;
-            };
-
-            // Отправляем сообщение
-            function send() {
-                let input = document.getElementById("input");
-                if (input.value) {
-                    data = {
-                        type: 3,
-                        payload: {
-                            authorId: "89dc5f5f-93d9-469a-b20a-c64b8d64a691",
-                            roomId: "019db14b-4640-756c-9894-4e5855ce581b",
-                            content: input.value
-                        },
-                    };
-                    ws.send(JSON.stringify(data));
-                    messages.innerHTML += "<div>← " + input.value + "</div>";
-                    input.value = "";
-                }
-            }
-
-            // Enter для отправки
-            document
-                .getElementById("input")
-                .addEventListener("keypress", (e) => {
-                    if (e.key === "Enter") send();
-                });
-        </script>
     </body>
 </html>
