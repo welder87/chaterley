@@ -1,4 +1,4 @@
-package user
+package repositories
 
 import (
 	"chaterley/internal/app/user"
@@ -7,11 +7,12 @@ import (
 )
 
 type UserRepository struct {
-	dbConn *sql.DB
+	writeDbConn *sql.DB
+	readDbConn  *sql.DB
 }
 
-func NewUserRepository(dbConn *sql.DB) *UserRepository {
-	return &UserRepository{dbConn: dbConn}
+func NewUserRepository(writeDbConn, readDbConn *sql.DB) *UserRepository {
+	return &UserRepository{writeDbConn: writeDbConn, readDbConn: readDbConn}
 }
 
 func (r *UserRepository) Save(ctx context.Context, entity *user.User) error {
@@ -29,7 +30,7 @@ func (r *UserRepository) Save(ctx context.Context, entity *user.User) error {
 			?, ?, ?, ?, ?, ?
 		)
 	`
-	_, err := r.dbConn.ExecContext(
+	_, err := r.writeDbConn.ExecContext(
 		ctx,
 		query,
 		entityDTO.ID,
@@ -50,7 +51,7 @@ func (r *UserRepository) Remove(ctx context.Context, entity *user.User) error {
 	query := `
 		DELETE FROM USER WHERE id=?
 	`
-	_, err := r.dbConn.ExecContext(
+	_, err := r.writeDbConn.ExecContext(
 		ctx,
 		query,
 		entityDTO.ID,
@@ -62,7 +63,7 @@ func (r *UserRepository) Remove(ctx context.Context, entity *user.User) error {
 }
 
 func (r *UserRepository) Get(ctx context.Context, entityID user.UserID) (*user.User, error) {
-	userFromDB := r.dbConn.QueryRowContext(ctx,
+	userFromDB := r.readDbConn.QueryRowContext(ctx,
 		"SELECT * FROM user WHERE id=?",
 		entityID.String(),
 	)

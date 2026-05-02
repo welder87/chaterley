@@ -15,4 +15,5 @@ CREATE INDEX idx_user_password ON user(password);
 
 -- +goose Down
 SELECT 'down SQL query';
+
 DROP TABLE user;

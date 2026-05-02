@@ -24,9 +24,9 @@ type Repository[Entity any] interface {
 	Save(ctx context.Context, entity *Entity) error
 	Remove(ctx context.Context, entity *Entity) error
 	Get(ctx context.Context, entityID EntityID[Entity]) (*Entity, error)
-	Exists(ctx context.Context, entityID EntityID[Entity]) (bool, error)
-	ExistsIds(
-		ctx context.Context,
-		entityIDs []EntityID[Entity],
-	) (map[EntityID[Entity]]struct{}, error)
+}
+
+type ExtendedRepository[Entity any] interface {
+	Repository[Entity]
+	GetAll(ctx context.Context) ([]*Entity, error)
 }

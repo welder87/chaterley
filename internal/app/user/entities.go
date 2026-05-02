@@ -42,6 +42,10 @@ func NewUser(login string, password string) *User {
 	}
 }
 
+func (u *User) ID() UserID {
+	return u.id
+}
+
 func (u *User) ToSnapshot() UserSnapshot {
 	snapshot := UserSnapshot{
 		ID:        u.id.String(),
