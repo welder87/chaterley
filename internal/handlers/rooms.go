@@ -20,12 +20,6 @@ func NewRoomsHandler(m *manager.Manager) *RoomsHandler {
 }
 
 func (h *RoomsHandler) Handle(c fiber.Ctx) error {
-	// sess := session.FromContext(c)
-	// username := sess.Get("username")
-	// if username == nil {
-	// 	return c.Redirect().To("/login")
-	// }
-
 	rooms := make([]RoomData, len(h.manager.Rooms))
 	for _, room := range h.manager.Rooms {
 		roomData, err := room.ToSnapshot()
