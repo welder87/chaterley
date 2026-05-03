@@ -52,7 +52,7 @@ func (u *User) ToSnapshot() UserSnapshot {
 	snapshot := UserSnapshot{
 		ID:           u.id.String(),
 		Login:        u.login.Val(),
-		Password:     u.password.Val(),
+		Password:     u.password.String(),
 		PasswordSalt: u.passwordSalt.String(),
 		CreatedAt:    u.createdAt.String(),
 		UpdatedAt:    u.updatedAt.String(),

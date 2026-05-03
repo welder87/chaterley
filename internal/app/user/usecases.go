@@ -22,16 +22,40 @@ func (uc *UserUseCase) CreateUser(
 	password string,
 	ctx context.Context,
 ) (*User, error) {
-	rawPassword, err := core.NewPassword[User](password)
-	if err != nil {
-		return &User{}, err
-	}
-
-	us, err := NewUser(login, rawPassword.String())
+	us, err := NewUser(login, password)
 	if err != nil {
 		return &User{}, err
 	}
 
 	uc.userRepo.Save(ctx, us)
+	return us, nil
+}
+
+func (uc *UserUseCase) CreateExistsUser(
+	login string,
+	password string,
+	ctx context.Context,
+) (*User, error) {
+	newLogin := core.NewLogin[User](login)
+
+	usFromDB, err := uc.userRepo.FindByLogin(ctx, newLogin)
+	if err != nil {
+		return &User{}, err
+	}
+
+	newPassword, err := core.NewPasswordHash[User](password, usFromDB.passwordSalt.Val())
+	if err != nil {
+		return &User{}, err
+	}
+
+	if newPassword != usFromDB.password {
+		return &User{}, nil
+	}
+
+	us, err := NewUser(login, password)
+	if err != nil {
+		return &User{}, err
+	}
+
 	return us, nil
 }

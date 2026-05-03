@@ -64,9 +64,21 @@ func (r *UserRepository) Remove(ctx context.Context, entity *user.User) error {
 }
 
 func (r *UserRepository) Get(ctx context.Context, entityID user.UserID) (*user.User, error) {
+	return r.findUser(ctx, "id = ?", entityID.String())
+}
+
+func (r *UserRepository) FindByLogin(ctx context.Context, entityLogin user.Login) (*user.User, error) {
+	return r.findUser(ctx, "login = ?", entityLogin.String())
+}
+
+func (r *UserRepository) findUser(
+	ctx context.Context,
+	findBy string,
+	queryParams ...interface{},
+) (*user.User, error) {
 	userFromDB := r.dbConn.QueryRowContext(ctx,
-		"SELECT * FROM user WHERE id=?",
-		entityID.String(),
+		"SELECT * FROM user WHERE "+findBy,
+		queryParams...,
 	)
 
 	var userDTO user.UserSnapshot

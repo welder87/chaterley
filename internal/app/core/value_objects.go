@@ -7,6 +7,8 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"encoding/base64"
+
 	argonize "github.com/KEINOS/go-argonize"
 	"github.com/google/uuid"
 )
@@ -109,23 +111,20 @@ func NewExistsLogin[Struct any](login string) (Login[Struct], error) {
 	return Login[Struct]{valueObject[string]{val: login}}, nil
 }
 
-type Password[Struct any] struct {
-	valueObject[string]
-}
-
-func NewPassword[Struct any](password string) (Password[Struct], error) {
-	val := strings.TrimSpace(password)
-	if len(val) < 8 {
-		return Password[Struct]{}, ErrPasswordLength
-	}
-	return Password[Struct]{valueObject[string]{val: val}}, nil
-}
-
 type PasswordHash[Struct any] struct {
 	valueObject[string]
 }
 
+func (ph PasswordHash[any]) String() string {
+	return base64.RawStdEncoding.EncodeToString([]byte(ph.val))
+}
+
 func NewPasswordHash[Struct any](password string, salt argonize.Salt) (PasswordHash[Struct], error) {
+	password = strings.TrimSpace(password)
+	if len(password) < 8 {
+		return PasswordHash[Struct]{}, ErrPasswordLength
+	}
+
 	bytePassword := []byte(password)
 	params := argonize.NewParams()
 
@@ -136,11 +135,15 @@ func NewPasswordHash[Struct any](password string, salt argonize.Salt) (PasswordH
 		return PasswordHash[Struct]{}, ErrGenPasswordHashed
 	}
 
-	return PasswordHash[Struct]{valueObject[string]{val: hashedObj.String()}}, nil
+	return PasswordHash[Struct]{valueObject[string]{val: string(hashedObj.Hash)}}, nil
 }
 
 func NewExistsPasswordHash[Struct any](password string) (PasswordHash[Struct], error) {
-	return PasswordHash[Struct]{valueObject[string]{val: password}}, nil
+	passwordFromB64, err := base64.RawStdEncoding.DecodeString(password)
+	if err != nil {
+		return PasswordHash[Struct]{}, ErrDecodePasswordFromB64
+	}
+	return PasswordHash[Struct]{valueObject[string]{val: string(passwordFromB64)}}, nil
 }
 
 // Соль для хэширования пароля
@@ -149,7 +152,7 @@ type PasswordSalt[Struct any] struct {
 }
 
 func (ps PasswordSalt[any]) String() string {
-	return string(ps.val)
+	return base64.RawStdEncoding.EncodeToString(ps.val)
 }
 
 func (ps PasswordSalt[any]) Val() argonize.Salt {
@@ -162,11 +165,16 @@ func NewPasswordSalt[Struct any]() (PasswordSalt[Struct], error) {
 	if err != nil {
 		return PasswordSalt[Struct]{}, ErrGenPasswordSalt
 	}
+
 	return PasswordSalt[Struct]{val: salt}, nil
 }
 
 func NewExistsPasswordSalt[Struct any](passwordSalt string) (PasswordSalt[Struct], error) {
-	return PasswordSalt[Struct]{val: []byte(passwordSalt)}, nil
+	passwordSaltFromB64, err := base64.RawStdEncoding.DecodeString(passwordSalt)
+	if err != nil {
+		return PasswordSalt[Struct]{}, ErrDecodePasswordFromB64
+	}
+	return PasswordSalt[Struct]{val: passwordSaltFromB64}, nil
 }
 
 // CreatedAt - дата создания.
