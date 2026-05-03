@@ -24,5 +24,10 @@ type Repository[Entity any] interface {
 	Save(ctx context.Context, entity *Entity) error
 	Remove(ctx context.Context, entity *Entity) error
 	Get(ctx context.Context, entityID EntityID[Entity]) (*Entity, error)
+}
+
+type ExtendedRepository[Entity any] interface {
+	Repository[Entity]
+	GetAll(ctx context.Context) ([]*Entity, error)
 	FindByLogin(ctx context.Context, entityLogin Login[Entity]) (*Entity, error)
 }

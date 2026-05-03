@@ -2,15 +2,14 @@ package room
 
 import (
 	"chaterley/internal/app/core"
-	"chaterley/internal/app/message"
 	"chaterley/internal/app/user"
 )
 
 // Максимальное количество пользователей в Комнате.
-const maxUserCount int = 100
+const MaxUserCount int = 50
 
-// Минимальное количество пользователей в Комнату.
-const minUserCount int = 2
+// Минимальное количество пользователей в Комнате.
+const MinUserCount int = 1
 
 type (
 	RoomID    = core.EntityID[Room]
@@ -38,13 +37,9 @@ type Room struct {
 	// memberIDs - идентификаторы Пользователей (предыдущее состояние)
 	memberIDs map[user.UserID]struct{}
 	// addedMemberIDs - идентификатор добавленного Пользователя
-	addedMemberIDs []user.UserID
+	addedMemberID *user.UserID
 	// removedMemberIDs - идентификатор удаленного Пользователя
-	removedMemberIDs []user.UserID
-	// addedMessageID - идентификатор добавленного Сообщения
-	addedMessageID *core.EntityID[message.Message]
-	// removedMessageID - идентификатор удаленного Сообщения
-	removedMessageID *core.EntityID[message.Message]
+	removedMemberID *user.UserID
 }
 
 // NewRoom создает новую Комнату.
@@ -55,14 +50,16 @@ func NewRoom(name string) (*Room, error) {
 		return nil, core.ValidationError{Field: "name", Code: core.Unknown, Err: err}
 	}
 	return &Room{
-		id:               core.NewEntityID[Room](),
-		name:             newName,
-		createdAt:        core.NewCreatedAt[Room](),
-		updatedAt:        core.NewUpdatedAt[Room](),
-		memberIDs:        make(map[user.UserID]struct{}, 1),
-		addedMemberIDs:   make([]user.UserID, 0, 2),
-		removedMemberIDs: make([]user.UserID, 0, 2),
+		id:        core.NewEntityID[Room](),
+		name:      newName,
+		createdAt: core.NewCreatedAt[Room](),
+		updatedAt: core.NewUpdatedAt[Room](),
+		memberIDs: make(map[user.UserID]struct{}, MinUserCount),
 	}, nil
+}
+
+func (r *Room) ID() RoomID {
+	return r.id
 }
 
 // ChangeName - смена наименования Комнаты.
@@ -88,7 +85,7 @@ func (r *Room) ChangeName(name string) error {
 
 // CheckMemberCount
 func (r *Room) CheckMemberCount(memberIDs []user.UserID) error {
-	if len(memberIDs) > maxUserCount {
+	if len(memberIDs) > MaxUserCount {
 		return core.ValidationError{Field: "memberIDs", Code: core.MaxMemberCount}
 	}
 	return nil
@@ -99,48 +96,31 @@ func (r *Room) AddMember(memberID user.UserID) error {
 	if _, ok := r.memberIDs[memberID]; ok {
 		return core.ValidationError{Field: "memberIDs", Code: core.MemberIsExists}
 	}
-	if len(r.memberIDs) > maxUserCount {
+	if len(r.memberIDs) > MaxUserCount {
 		return core.ValidationError{Field: "memberIDs", Code: core.MaxMemberCount}
 	}
 	r.memberIDs[memberID] = struct{}{}
-	r.addedMemberIDs = append(r.addedMemberIDs, memberID)
+	r.addedMemberID = &memberID
 	r.updatedAt = core.NewUpdatedAt[Room]()
 	return nil
 }
 
-// AddMember - добавление члена Комнаты.
-func (r *Room) AddMembers(memberIDs []user.UserID) error {
-	for idx := range memberIDs {
-		if err := r.AddMember(memberIDs[idx]); err != nil {
-			return err
-		}
-	}
-	return nil
+// HasMember
+func (r *Room) HasMember(memberID user.UserID) bool {
+	_, ok := r.memberIDs[memberID]
+	return ok
 }
 
 // RemoveMember - удаление члена Комнаты.
-func (r *Room) RemoveMember(memberID core.EntityID[user.User]) error {
+func (r *Room) RemoveMember(memberID user.UserID) error {
 	if _, ok := r.memberIDs[memberID]; !ok {
 		return core.ValidationError{Field: "memberIDs", Code: core.MemberIsNotExists}
 	}
-	if len(r.memberIDs) <= minUserCount {
+	if len(r.memberIDs) <= MinUserCount {
 		return core.ValidationError{Field: "memberIDs", Code: core.MinMemberCount}
 	}
 	delete(r.memberIDs, memberID)
-	r.removedMemberIDs = append(r.addedMemberIDs, memberID)
-	r.updatedAt = core.NewUpdatedAt[Room]()
-	return nil
-}
-
-// AddMessage
-func (r *Room) AddMessage(messageID core.EntityID[message.Message]) error {
-	r.addedMessageID = &messageID
-	r.updatedAt = core.NewUpdatedAt[Room]()
-	return nil
-}
-
-func (r *Room) RemoveMessage(messageID core.EntityID[message.Message]) error {
-	r.removedMessageID = &messageID
+	r.removedMemberID = &memberID
 	r.updatedAt = core.NewUpdatedAt[Room]()
 	return nil
 }
@@ -164,25 +144,15 @@ func (r *Room) ToSnapshot() (RoomSnapshot, error) {
 		deletedAt := r.deletedAt.String()
 		snapshot.DeletedAt = &deletedAt
 	}
-	snapshot.AddedMemberIDs = uuidsToStrings(r.addedMemberIDs)
-	snapshot.RemovedMemberIDs = uuidsToStrings(r.removedMemberIDs)
-	if r.addedMessageID != nil {
-		addedMessageID := r.addedMessageID.String()
-		snapshot.AddedMessageID = &addedMessageID
+	if r.addedMemberID != nil {
+		memberID := r.addedMemberID.String()
+		snapshot.AddedMemberID = &memberID
 	}
-	if r.removedMessageID != nil {
-		removedMessageID := r.removedMessageID.String()
-		snapshot.RemovedMessageID = &removedMessageID
+	if r.removedMemberID != nil {
+		memberID := r.removedMemberID.String()
+		snapshot.RemovedMemberID = &memberID
 	}
 	return snapshot, nil
-}
-
-func uuidsToStrings(memberIDs []core.EntityID[user.User]) []string {
-	ids := make([]string, 0, len(memberIDs))
-	for idx := range memberIDs {
-		ids = append(ids, memberIDs[idx].Val().String())
-	}
-	return ids
 }
 
 // RoomSnapshot - структура данных - состояние Комнаты, на момент сериализации.
@@ -197,10 +167,43 @@ type RoomSnapshot struct {
 	UpdatedAt string
 	// DeletedAt - дата удаления Комнаты
 	DeletedAt *string
-	// AddedMemberIDs - идентификаторы добавленных пользователей в Комнату.
-	AddedMemberIDs []string
-	// RemovedMemberIDs - идентификаторы удаленных пользователей из Комнаты.
-	RemovedMemberIDs []string
-	AddedMessageID   *string
-	RemovedMessageID *string
+	// AddedMemberIDs - идентификатор добавленного пользователя в Комнату.
+	AddedMemberID *string
+	// RemovedMemberIDs - идентификатор удаленного пользователя из Комнаты.
+	RemovedMemberID *string
+}
+
+func NewRoomFromSnapshot(snapshot RoomSnapshot) (*Room, error) {
+	emptyMessage := Room{}
+	messageID, err := core.NewExistsEntityID[Room](snapshot.ID)
+	if err != nil {
+		return &emptyMessage, err
+	}
+	name, err := core.NewExistsName[Room](snapshot.Name)
+	if err != nil {
+		return &emptyMessage, err
+	}
+	createdAt, err := core.NewExistsCreatedAt[Room](snapshot.CreatedAt)
+	if err != nil {
+		return &emptyMessage, err
+	}
+	updatedAt, err := core.NewExistsUpdatedAt[Room](snapshot.UpdatedAt)
+	if err != nil {
+		return &emptyMessage, err
+	}
+	var deletedAt *DeletedAt = nil
+	if snapshot.DeletedAt != nil {
+		newDeletedAt, err := core.NewExistsDeletedAt[Room](*(snapshot.DeletedAt))
+		if err != nil {
+			return &emptyMessage, err
+		}
+		deletedAt = &newDeletedAt
+	}
+	return &Room{
+		id:        messageID,
+		name:      name,
+		createdAt: createdAt,
+		updatedAt: updatedAt,
+		deletedAt: deletedAt,
+	}, nil
 }

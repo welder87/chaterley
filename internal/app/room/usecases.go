@@ -2,45 +2,40 @@ package room
 
 import (
 	"chaterley/internal/app/core"
-	"chaterley/internal/app/message"
 	"chaterley/internal/app/user"
 	"context"
 )
 
 type RoomUseCase struct {
-	roomRepo core.Repository[Room]
+	roomRepo core.ExtendedRepository[Room]
 	userRepo core.Repository[user.User]
-	msgRepo  core.Repository[message.Message]
 }
 
 func NewRoomUseCase(
-	roomRepo core.Repository[Room],
+	roomRepo core.ExtendedRepository[Room],
 	userRepo core.Repository[user.User],
-	msgRepo core.Repository[message.Message],
 ) *RoomUseCase {
-	return &RoomUseCase{roomRepo: roomRepo, userRepo: userRepo, msgRepo: msgRepo}
+	return &RoomUseCase{roomRepo: roomRepo, userRepo: userRepo}
+}
+
+func (r *RoomUseCase) GetRooms(ctx context.Context) ([]*Room, error) {
+	return r.roomRepo.GetAll(ctx)
 }
 
 func (r *RoomUseCase) CreateRoom(
 	ctx context.Context,
 	name string,
-	memberIDs []user.UserID,
+	creatorID user.UserID,
 ) error {
 	room, err := NewRoom(name)
 	if err != nil {
 		return err
 	}
-	if err = room.CheckMemberCount(memberIDs); err != nil {
-		return err
-	}
-	existingUserIDs, err := r.userRepo.ExistsIds(ctx, memberIDs)
+	_, err = r.userRepo.Get(ctx, creatorID)
 	if err != nil {
 		return err
 	}
-	if diff := r.checkDiff(memberIDs, existingUserIDs); len(diff) > 0 {
-		return core.ValidationError{Field: "memberIDs", Code: core.MemberIsNotExists}
-	}
-	if err = room.AddMembers(memberIDs); err != nil {
+	if err = room.AddMember(creatorID); err != nil {
 		return err
 	}
 	return r.saveRoom(ctx, room)
@@ -83,12 +78,9 @@ func (r *RoomUseCase) AddMemberToRoom(
 	if err != nil {
 		return err
 	}
-	isExists, err := r.userRepo.Exists(ctx, memberID)
+	_, err = r.userRepo.Get(ctx, memberID)
 	if err != nil {
 		return err
-	}
-	if !isExists {
-		return core.ValidationError{Field: "memberIDs", Code: core.MemberIsNotExists}
 	}
 	if err = room.AddMember(memberID); err != nil {
 		return err
@@ -105,34 +97,15 @@ func (r *RoomUseCase) RemoveMemberFromRoom(
 	if err != nil {
 		return err
 	}
-	isExists, err := r.userRepo.Exists(ctx, memberID)
+	_, err = r.userRepo.Get(ctx, memberID)
 	if err != nil {
 		return err
-	}
-	if !isExists {
-		return core.ValidationError{Field: "memberIDs", Code: core.MemberIsNotExists}
 	}
 	err = room.RemoveMember(memberID)
 	if err != nil {
 		return err
 	}
 	return r.saveRoom(ctx, room)
-}
-
-func (r *RoomUseCase) checkDiff(
-	memberIDs []user.UserID,
-	existingMemberIDs map[user.UserID]struct{},
-) []user.UserID {
-	if len(existingMemberIDs) == 0 {
-		return memberIDs
-	}
-	diff := make([]user.UserID, 0, len(memberIDs))
-	for idx := range memberIDs {
-		if _, ok := existingMemberIDs[memberIDs[idx]]; !ok {
-			diff = append(diff, memberIDs[idx])
-		}
-	}
-	return diff
 }
 
 func (r *RoomUseCase) saveRoom(ctx context.Context, room *Room) error {

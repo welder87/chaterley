@@ -6,11 +6,11 @@ import (
 )
 
 type UserUseCase struct {
-	userRepo core.Repository[User]
+	userRepo core.ExtendedRepository[User]
 }
 
 func NewUserUseCase(
-	userRepo core.Repository[User],
+	userRepo core.ExtendedRepository[User],
 ) *UserUseCase {
 	return &UserUseCase{
 		userRepo: userRepo,

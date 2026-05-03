@@ -16,7 +16,6 @@ func NewMessageSnapshotFixture() *message.MessageSnapshot {
 		UpdatedAt: NewDateTimeFixture(),
 		DeletedAt: nil,
 		AuthorID:  uuid.NewString(),
-		Seen:      gofakeit.Bool(),
 		Content:   gofakeit.Comment(),
 	}
 }

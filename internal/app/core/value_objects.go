@@ -97,6 +97,10 @@ func NewName[Struct any](name string) (Name[Struct], error) {
 	return Name[Struct]{valueObject[string]{val: name}}, nil
 }
 
+func NewExistsName[Struct any](name string) (Name[Struct], error) {
+	return Name[Struct]{valueObject[string]{val: name}}, nil
+}
+
 type Login[Struct any] struct {
 	valueObject[string]
 }

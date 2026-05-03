@@ -2,6 +2,7 @@ package message
 
 import (
 	"chaterley/internal/app/core"
+	"chaterley/internal/app/room"
 	"chaterley/internal/app/user"
 )
 
@@ -13,7 +14,6 @@ type (
 	UpdatedAt = core.UpdatedAt[Message]
 	DeletedAt = core.DeletedAt[Message]
 	Content   = core.Content[Message]
-	Seen      = core.Seen[Message]
 )
 
 // Message - Сообщение из Чата.
@@ -24,8 +24,8 @@ type Message struct {
 	content Content
 	// authorID - идентификатор Пользователя (автора) Сообщения
 	authorID user.UserID
-	// seen - флаг прочтения Сообщения
-	seen Seen
+	// roomID - идентификатор Комнаты
+	roomID room.RoomID
 	// createdAt - дата и время создания Сообщения
 	createdAt CreatedAt
 	// updatedAt - дата и время обновления Сообщения
@@ -36,14 +36,22 @@ type Message struct {
 
 // NewMessage создает новый экземпляр структуры Message и возвращает указатель.
 // В дальнейшем должна возвращать ошибку, если какое-то из полей невалидно.
-func NewMessage(authorID user.UserID, content string) (*Message, error) {
+func NewMessage(roomID string, authorID string, content string) (*Message, error) {
 	newContent := core.NewContent[Message](content)
+	newAuthorID, err := core.NewExistsEntityID[user.User](authorID)
+	if err != nil {
+		return &Message{}, err
+	}
+	newRoomID, err := core.NewExistsEntityID[room.Room](roomID)
+	if err != nil {
+		return &Message{}, err
+	}
 	return &Message{
 		id:        core.NewEntityID[Message](),
 		createdAt: core.NewCreatedAt[Message](),
 		updatedAt: core.NewUpdatedAt[Message](),
-		authorID:  authorID,
-		seen:      core.NewSeen[Message](),
+		authorID:  newAuthorID,
+		roomID:    newRoomID,
 		content:   newContent,
 	}, nil
 }
@@ -58,7 +66,7 @@ type MessageSnapshot struct {
 	UpdatedAt string
 	DeletedAt *string
 	AuthorID  string
-	Seen      bool
+	RoomID    string
 	Content   string
 }
 
@@ -68,7 +76,7 @@ func (m *Message) ToSnapshot() MessageSnapshot {
 		CreatedAt: m.createdAt.String(),
 		UpdatedAt: m.updatedAt.String(),
 		AuthorID:  m.authorID.String(),
-		Seen:      m.seen.Val(),
+		RoomID:    m.roomID.String(),
 		Content:   m.content.String(),
 	}
 	if m.deletedAt != nil {
@@ -104,13 +112,17 @@ func NewMessageFromSnapshot(snapshot MessageSnapshot) (*Message, error) {
 	if err != nil {
 		return &emptyMessage, err
 	}
+	roomID, err := core.NewExistsEntityID[room.Room](snapshot.RoomID)
+	if err != nil {
+		return &emptyMessage, err
+	}
 	return &Message{
 		id:        messageID,
 		createdAt: createdAt,
 		updatedAt: updatedAt,
 		deletedAt: deletedAt,
-		seen:      core.NewExistsSeen[Message](snapshot.Seen),
 		content:   core.NewContent[Message](snapshot.Content),
 		authorID:  authorID,
+		roomID:    roomID,
 	}, nil
 }
