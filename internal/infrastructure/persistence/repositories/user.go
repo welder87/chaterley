@@ -6,6 +6,10 @@ import (
 	"database/sql"
 )
 
+type Scanner interface {
+	Scan(...interface{}) error
+}
+
 type UserRepository struct {
 	writeDbConn *sql.DB
 	readDbConn  *sql.DB
@@ -51,7 +55,7 @@ func (r *UserRepository) Save(ctx context.Context, entity *user.User) error {
 func (r *UserRepository) Remove(ctx context.Context, entity *user.User) error {
 	entityDTO := entity.ToSnapshot()
 	query := `
-		DELETE FROM USER WHERE id=?
+		DELETE FROM user WHERE id=?
 	`
 	_, err := r.writeDbConn.ExecContext(
 		ctx,
@@ -72,6 +76,31 @@ func (r *UserRepository) FindByLogin(ctx context.Context, entityLogin user.Login
 	return r.findUser(ctx, "login = ?", entityLogin.String())
 }
 
+func (r *UserRepository) GetAll(ctx context.Context) ([]*user.User, error) {
+	query := `SELECT * FROM user`
+	usersFromDB, err := r.readDbConn.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer usersFromDB.Close()
+
+	var users []*user.User
+
+	for usersFromDB.Next() {
+		user, err := r.getUserFromSnapshot(usersFromDB)
+		if err != nil {
+			return users, err
+		}
+		users = append(users, user)
+	}
+
+	if err = usersFromDB.Err(); err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
+
 func (r *UserRepository) findUser(
 	ctx context.Context,
 	findBy string,
@@ -81,6 +110,10 @@ func (r *UserRepository) findUser(
 		"SELECT * FROM user WHERE "+findBy,
 		queryParams...,
 	)
+	return r.getUserFromSnapshot(userFromDB)
+}
+
+func (r *UserRepository) getUserFromSnapshot(userFromDB Scanner) (*user.User, error) {
 	var userDTO user.UserSnapshot
 	err := userFromDB.Scan(
 		&userDTO.ID,

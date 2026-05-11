@@ -2,7 +2,6 @@ package core
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -123,7 +122,7 @@ func (ph PasswordHash[any]) String() string {
 	return base64.RawStdEncoding.EncodeToString([]byte(ph.val))
 }
 
-func NewPasswordHash[Struct any](password string, salt argonize.Salt) (PasswordHash[Struct], error) {
+func NewPasswordHash[Struct any](password string, salt argonize.Salt, pepper string) (PasswordHash[Struct], error) {
 	password = strings.TrimSpace(password)
 	if len(password) < 8 {
 		return PasswordHash[Struct]{}, ErrPasswordLength
@@ -132,8 +131,7 @@ func NewPasswordHash[Struct any](password string, salt argonize.Salt) (PasswordH
 	bytePassword := []byte(password)
 	params := argonize.NewParams()
 
-	paper := []byte(os.Getenv("PASSWORD_PEPER"))
-	salt.AddPepper(paper)
+	salt.AddPepper([]byte(pepper))
 	hashedObj := argonize.HashCustom(bytePassword, salt, params)
 	if !hashedObj.IsValidPassword(bytePassword) {
 		return PasswordHash[Struct]{}, ErrGenPasswordHashed

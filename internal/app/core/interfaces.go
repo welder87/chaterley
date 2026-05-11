@@ -26,8 +26,17 @@ type Repository[Entity any] interface {
 	Get(ctx context.Context, entityID EntityID[Entity]) (*Entity, error)
 }
 
-type ExtendedRepository[Entity any] interface {
+type ExtendedRoomRepository[Entity any] interface {
+	Repository[Entity]
+	GetAll(ctx context.Context) ([]*Entity, error)
+}
+
+type ExtendedUserRepository[Entity any] interface {
 	Repository[Entity]
 	GetAll(ctx context.Context) ([]*Entity, error)
 	FindByLogin(ctx context.Context, entityLogin Login[Entity]) (*Entity, error)
+}
+
+type Secrets interface {
+	GetPasswordPepper() (string, error)
 }

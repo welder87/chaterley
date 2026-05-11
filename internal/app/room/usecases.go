@@ -7,12 +7,12 @@ import (
 )
 
 type RoomUseCase struct {
-	roomRepo core.ExtendedRepository[Room]
+	roomRepo core.ExtendedRoomRepository[Room]
 	userRepo core.Repository[user.User]
 }
 
 func NewRoomUseCase(
-	roomRepo core.ExtendedRepository[Room],
+	roomRepo core.ExtendedRoomRepository[Room],
 	userRepo core.Repository[user.User],
 ) *RoomUseCase {
 	return &RoomUseCase{roomRepo: roomRepo, userRepo: userRepo}

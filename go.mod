@@ -4,11 +4,13 @@ go 1.25.0
 
 require (
 	github.com/KEINOS/go-argonize v1.7.0
+	github.com/awnumar/memguard v0.23.0
 	github.com/brianvoe/gofakeit/v7 v7.14.1
 	github.com/gofiber/contrib/v3/websocket v1.1.1
 	github.com/gofiber/fiber/v3 v3.1.0
 	github.com/gofiber/template/html/v2 v2.1.3
 	github.com/google/uuid v1.6.0
+	github.com/joho/godotenv v1.5.1
 	github.com/pressly/goose/v3 v3.27.0
 	github.com/stretchr/testify v1.11.1
 	modernc.org/sqlite v1.46.1
@@ -16,6 +18,7 @@ require (
 
 require (
 	github.com/andybalholm/brotli v1.2.1 // indirect
+	github.com/awnumar/memcall v0.4.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/fasthttp/websocket v1.5.12 // indirect

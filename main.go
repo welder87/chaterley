@@ -4,13 +4,18 @@ import (
 	"chaterley/internal/app/manager"
 	"chaterley/internal/app/message"
 	"chaterley/internal/app/room"
+	"chaterley/internal/app/user"
 	"chaterley/internal/handlers"
 	"chaterley/internal/infrastructure/persistence/db"
 	"chaterley/internal/infrastructure/persistence/queries"
 	"chaterley/internal/infrastructure/persistence/repositories"
 	"context"
+	"fmt"
 	"log"
 
+	"os"
+
+	"github.com/awnumar/memguard"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/compress"
 	"github.com/gofiber/fiber/v3/middleware/cors"
@@ -19,9 +24,39 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/requestid"
 	"github.com/gofiber/fiber/v3/middleware/static"
 	"github.com/gofiber/template/html/v2"
+	"github.com/joho/godotenv"
 )
 
+type SecureSecrets struct {
+	PasswordPepper *memguard.Enclave
+}
+
+func (s *SecureSecrets) GetPasswordPepper() (string, error) {
+	buffer, err := s.PasswordPepper.Open()
+	if err != nil {
+		return "", err
+	}
+	defer buffer.Destroy()
+	return string(buffer.Bytes()), nil
+}
+
+func configurateSecrets() (*SecureSecrets, error) {
+	godotenv.Load()
+	passwordPepper := os.Getenv("PASSWORD_PEPPER")
+	if passwordPepper == "" {
+		panic("PASSWORD_PAPPER settings must be set")
+	}
+
+	securePasswordPepper := memguard.NewEnclave([]byte(passwordPepper))
+
+	return &SecureSecrets{PasswordPepper: securePasswordPepper}, nil
+}
+
 func main() {
+	secrets, err := configurateSecrets()
+	if err != nil {
+		panic("Cannot build secrets for app startup.")
+	}
 	writeConn, readConn := db.GetWriteDbCon(), db.GetReadDBCon()
 	defer writeConn.Close()
 	defer readConn.Close()
@@ -30,7 +65,26 @@ func main() {
 	messageRepo := repositories.NewMessageRepository(writeConn, readConn)
 	roomUseCase := room.NewRoomUseCase(roomRepo, userRepo)
 	msgUseCase := message.NewMessageUseCase(messageRepo)
+	userUseCase := user.NewUserUseCase(userRepo)
 	ctx := context.Background()
+
+	login := "test"
+	password := "test12345"
+
+	// Создание пользователя
+	user, err := userUseCase.CreateUser(login, password, ctx)
+	if err != nil {
+		panic("Create user is not success")
+	}
+	fmt.Println(user)
+
+	// Проверка пароля пользователя
+	userExst, err := userUseCase.CreateExistsUser(login, password, ctx, secrets)
+	if err != nil {
+		panic("Password is invalid")
+	}
+	fmt.Println(userExst)
+
 	mgr := manager.NewManager(roomUseCase, msgUseCase)
 	mgr.LoadRooms(ctx)
 	wsHandler := handlers.NewWebSocketHandler(mgr)

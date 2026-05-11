@@ -6,11 +6,11 @@ import (
 )
 
 type UserUseCase struct {
-	userRepo core.ExtendedRepository[User]
+	userRepo core.ExtendedUserRepository[User]
 }
 
 func NewUserUseCase(
-	userRepo core.ExtendedRepository[User],
+	userRepo core.ExtendedUserRepository[User],
 ) *UserUseCase {
 	return &UserUseCase{
 		userRepo: userRepo,
@@ -35,6 +35,7 @@ func (uc *UserUseCase) CreateExistsUser(
 	login string,
 	password string,
 	ctx context.Context,
+	secrets core.Secrets,
 ) (*User, error) {
 	newLogin := core.NewLogin[User](login)
 
@@ -43,7 +44,12 @@ func (uc *UserUseCase) CreateExistsUser(
 		return &User{}, err
 	}
 
-	newPassword, err := core.NewPasswordHash[User](password, usFromDB.passwordSalt.Val())
+	passwordPepper, err := secrets.GetPasswordPepper()
+	if err != nil {
+		return nil, err
+	}
+
+	newPassword, err := core.NewPasswordHash[User](password, usFromDB.passwordSalt.Val(), passwordPepper)
 	if err != nil {
 		return &User{}, err
 	}
