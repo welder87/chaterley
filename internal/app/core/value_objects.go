@@ -1,6 +1,7 @@
 package core
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 	"time"
@@ -22,6 +23,10 @@ type timeValueObject struct {
 	valueObject[time.Time]
 }
 
+type bytesValueObject struct {
+	val []byte
+}
+
 func (vo timeValueObject) String() string {
 	return vo.val.Format(time.RFC3339Nano)
 }
@@ -38,6 +43,18 @@ func (vo valueObject[Value]) Equal(other valueObject[Value]) bool {
 // String - приведение значения к строке.
 func (vo valueObject[Value]) String() string {
 	return fmt.Sprintf("%v", vo.val)
+}
+
+func (bo bytesValueObject) String() string {
+	return base64.RawStdEncoding.EncodeToString(bo.val)
+}
+
+func (bo bytesValueObject) Val() []byte {
+	return bo.val
+}
+
+func (bo bytesValueObject) Equal(other []byte) bool {
+	return bytes.Equal(bo.val, other)
 }
 
 // EntityID - идентификатор сущности.
@@ -115,14 +132,10 @@ func NewExistsLogin[Struct any](login string) (Login[Struct], error) {
 }
 
 type PasswordHash[Struct any] struct {
-	valueObject[string]
+	bytesValueObject
 }
 
-func (ph PasswordHash[any]) String() string {
-	return base64.RawStdEncoding.EncodeToString([]byte(ph.val))
-}
-
-func NewPasswordHash[Struct any](password string, salt argonize.Salt, pepper string) (PasswordHash[Struct], error) {
+func NewPasswordHash[Struct any](password string, salt argonize.Salt, pepper []byte) (PasswordHash[Struct], error) {
 	password = strings.TrimSpace(password)
 	if len(password) < 8 {
 		return PasswordHash[Struct]{}, ErrPasswordLength
@@ -131,13 +144,13 @@ func NewPasswordHash[Struct any](password string, salt argonize.Salt, pepper str
 	bytePassword := []byte(password)
 	params := argonize.NewParams()
 
-	salt.AddPepper([]byte(pepper))
+	salt.AddPepper(pepper)
 	hashedObj := argonize.HashCustom(bytePassword, salt, params)
 	if !hashedObj.IsValidPassword(bytePassword) {
 		return PasswordHash[Struct]{}, ErrGenPasswordHashed
 	}
 
-	return PasswordHash[Struct]{valueObject[string]{val: string(hashedObj.Hash)}}, nil
+	return PasswordHash[Struct]{bytesValueObject{val: hashedObj.Hash}}, nil
 }
 
 func NewExistsPasswordHash[Struct any](password string) (PasswordHash[Struct], error) {
@@ -145,7 +158,7 @@ func NewExistsPasswordHash[Struct any](password string) (PasswordHash[Struct], e
 	if err != nil {
 		return PasswordHash[Struct]{}, ErrDecodePasswordFromB64
 	}
-	return PasswordHash[Struct]{valueObject[string]{val: string(passwordFromB64)}}, nil
+	return PasswordHash[Struct]{bytesValueObject{val: passwordFromB64}}, nil
 }
 
 // Соль для хэширования пароля

@@ -2,7 +2,6 @@ package user
 
 import (
 	"chaterley/internal/app/core"
-	"os"
 )
 
 type (
@@ -36,9 +35,9 @@ type User struct {
 
 // NewUser создает нового пользователя.
 // В дальнейшем должна возвращать ошибку, если какое-то из полей невалидно.
-func NewUser(login string, password string) (*User, error) {
+func NewUser(login string, password string, passwordPepper []byte) (*User, error) {
 	passwordSalt, _ := core.NewPasswordSalt[User]()
-	hashedPassword, _ := core.NewPasswordHash[User](password, passwordSalt.Val(), os.Getenv("PASSWORD_PEPPER"))
+	hashedPassword, _ := core.NewPasswordHash[User](password, passwordSalt.Val(), passwordPepper)
 	return &User{
 		id:           core.NewEntityID[User](),
 		login:        core.NewLogin[User](login),

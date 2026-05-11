@@ -21,8 +21,14 @@ func (uc *UserUseCase) CreateUser(
 	login string,
 	password string,
 	ctx context.Context,
+	secrets core.Secrets,
 ) (*User, error) {
-	us, err := NewUser(login, password)
+	passwordPepper, err := secrets.GetPasswordPepper()
+	if err != nil {
+		return nil, err
+	}
+
+	us, err := NewUser(login, password, passwordPepper)
 	if err != nil {
 		return &User{}, err
 	}
@@ -54,11 +60,11 @@ func (uc *UserUseCase) CreateExistsUser(
 		return &User{}, err
 	}
 
-	if newPassword != usFromDB.password {
+	if !newPassword.Equal(usFromDB.password.Val()) {
 		return &User{}, nil
 	}
 
-	us, err := NewUser(login, password)
+	us, err := NewUser(login, password, passwordPepper)
 	if err != nil {
 		return &User{}, err
 	}

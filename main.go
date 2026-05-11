@@ -4,13 +4,11 @@ import (
 	"chaterley/internal/app/manager"
 	"chaterley/internal/app/message"
 	"chaterley/internal/app/room"
-	"chaterley/internal/app/user"
 	"chaterley/internal/handlers"
 	"chaterley/internal/infrastructure/persistence/db"
 	"chaterley/internal/infrastructure/persistence/queries"
 	"chaterley/internal/infrastructure/persistence/repositories"
 	"context"
-	"fmt"
 	"log"
 
 	"os"
@@ -31,13 +29,17 @@ type SecureSecrets struct {
 	PasswordPepper *memguard.Enclave
 }
 
-func (s *SecureSecrets) GetPasswordPepper() (string, error) {
+func (s *SecureSecrets) GetPasswordPepper() ([]byte, error) {
 	buffer, err := s.PasswordPepper.Open()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer buffer.Destroy()
-	return string(buffer.Bytes()), nil
+
+	source := buffer.Bytes()
+	pepper := make([]byte, len(source))
+	copy(pepper, source)
+	return pepper, nil
 }
 
 func configurateSecrets() (*SecureSecrets, error) {
@@ -53,10 +55,10 @@ func configurateSecrets() (*SecureSecrets, error) {
 }
 
 func main() {
-	secrets, err := configurateSecrets()
-	if err != nil {
-		panic("Cannot build secrets for app startup.")
-	}
+	// secrets, err := configurateSecrets()
+	// if err != nil {
+	// 	panic("Cannot build secrets for app startup.")
+	// }
 	writeConn, readConn := db.GetWriteDbCon(), db.GetReadDBCon()
 	defer writeConn.Close()
 	defer readConn.Close()
@@ -65,25 +67,25 @@ func main() {
 	messageRepo := repositories.NewMessageRepository(writeConn, readConn)
 	roomUseCase := room.NewRoomUseCase(roomRepo, userRepo)
 	msgUseCase := message.NewMessageUseCase(messageRepo)
-	userUseCase := user.NewUserUseCase(userRepo)
+	// userUseCase := user.NewUserUseCase(userRepo)
 	ctx := context.Background()
 
-	login := "test"
-	password := "test12345"
+	// login := "test"
+	// password := "test12345"
 
-	// Создание пользователя
-	user, err := userUseCase.CreateUser(login, password, ctx)
-	if err != nil {
-		panic("Create user is not success")
-	}
-	fmt.Println(user)
+	// // Создание пользователя
+	// user, err := userUseCase.CreateUser(login, password, ctx, secrets)
+	// if err != nil {
+	// 	panic("Create user is not success")
+	// }
+	// fmt.Println(user)
 
-	// Проверка пароля пользователя
-	userExst, err := userUseCase.CreateExistsUser(login, password, ctx, secrets)
-	if err != nil {
-		panic("Password is invalid")
-	}
-	fmt.Println(userExst)
+	// // Проверка пароля пользователя
+	// userExst, err := userUseCase.CreateExistsUser(login, password, ctx, secrets)
+	// if err != nil {
+	// 	panic("Password is invalid")
+	// }
+	// fmt.Println(userExst)
 
 	mgr := manager.NewManager(roomUseCase, msgUseCase)
 	mgr.LoadRooms(ctx)

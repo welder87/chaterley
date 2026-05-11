@@ -38,5 +38,5 @@ type ExtendedUserRepository[Entity any] interface {
 }
 
 type Secrets interface {
-	GetPasswordPepper() (string, error)
+	GetPasswordPepper() ([]byte, error)
 }
