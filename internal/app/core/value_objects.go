@@ -137,7 +137,7 @@ type PasswordHash[Struct any] struct {
 
 func NewPasswordHash[Struct any](password string, salt argonize.Salt, pepper []byte) (PasswordHash[Struct], error) {
 	password = strings.TrimSpace(password)
-	if len(password) < 8 {
+	if utf8.RuneCountInString(password) < 8 {
 		return PasswordHash[Struct]{}, ErrPasswordLength
 	}
 

@@ -55,10 +55,6 @@ func configurateSecrets() (*SecureSecrets, error) {
 }
 
 func main() {
-	// secrets, err := configurateSecrets()
-	// if err != nil {
-	// 	panic("Cannot build secrets for app startup.")
-	// }
 	writeConn, readConn := db.GetWriteDbCon(), db.GetReadDBCon()
 	defer writeConn.Close()
 	defer readConn.Close()
@@ -67,26 +63,7 @@ func main() {
 	messageRepo := repositories.NewMessageRepository(writeConn, readConn)
 	roomUseCase := room.NewRoomUseCase(roomRepo, userRepo)
 	msgUseCase := message.NewMessageUseCase(messageRepo)
-	// userUseCase := user.NewUserUseCase(userRepo)
 	ctx := context.Background()
-
-	// login := "test"
-	// password := "test12345"
-
-	// // Создание пользователя
-	// user, err := userUseCase.CreateUser(login, password, ctx, secrets)
-	// if err != nil {
-	// 	panic("Create user is not success")
-	// }
-	// fmt.Println(user)
-
-	// // Проверка пароля пользователя
-	// userExst, err := userUseCase.CreateExistsUser(login, password, ctx, secrets)
-	// if err != nil {
-	// 	panic("Password is invalid")
-	// }
-	// fmt.Println(userExst)
-
 	mgr := manager.NewManager(roomUseCase, msgUseCase)
 	mgr.LoadRooms(ctx)
 	wsHandler := handlers.NewWebSocketHandler(mgr)
