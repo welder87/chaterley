@@ -11,6 +11,9 @@ import (
 	"context"
 	"log"
 
+	"os"
+
+	"github.com/awnumar/memguard"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/compress"
 	"github.com/gofiber/fiber/v3/middleware/cors"
@@ -19,7 +22,37 @@ import (
 	"github.com/gofiber/fiber/v3/middleware/requestid"
 	"github.com/gofiber/fiber/v3/middleware/static"
 	"github.com/gofiber/template/html/v2"
+	"github.com/joho/godotenv"
 )
+
+type SecureSecrets struct {
+	PasswordPepper *memguard.Enclave
+}
+
+func (s *SecureSecrets) GetPasswordPepper() ([]byte, error) {
+	buffer, err := s.PasswordPepper.Open()
+	if err != nil {
+		return nil, err
+	}
+	defer buffer.Destroy()
+
+	source := buffer.Bytes()
+	pepper := make([]byte, len(source))
+	copy(pepper, source)
+	return pepper, nil
+}
+
+func configurateSecrets() (*SecureSecrets, error) {
+	godotenv.Load()
+	passwordPepper := os.Getenv("PASSWORD_PEPPER")
+	if passwordPepper == "" {
+		panic("PASSWORD_PAPPER settings must be set")
+	}
+
+	securePasswordPepper := memguard.NewEnclave([]byte(passwordPepper))
+
+	return &SecureSecrets{PasswordPepper: securePasswordPepper}, nil
+}
 
 func main() {
 	writeConn, readConn := db.GetWriteDbCon(), db.GetReadDBCon()

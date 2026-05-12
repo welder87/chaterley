@@ -3,10 +3,14 @@ module chaterley
 go 1.25.0
 
 require (
+	github.com/KEINOS/go-argonize v1.7.0
+	github.com/awnumar/memguard v0.23.0
 	github.com/brianvoe/gofakeit/v7 v7.14.1
 	github.com/gofiber/contrib/v3/websocket v1.1.1
 	github.com/gofiber/fiber/v3 v3.1.0
+	github.com/gofiber/template/html/v2 v2.1.3
 	github.com/google/uuid v1.6.0
+	github.com/joho/godotenv v1.5.1
 	github.com/pressly/goose/v3 v3.27.0
 	github.com/stretchr/testify v1.11.1
 	modernc.org/sqlite v1.46.1
@@ -14,12 +18,12 @@ require (
 
 require (
 	github.com/andybalholm/brotli v1.2.1 // indirect
+	github.com/awnumar/memcall v0.4.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/fasthttp/websocket v1.5.12 // indirect
 	github.com/gofiber/schema v1.7.1 // indirect
 	github.com/gofiber/template v1.8.3 // indirect
-	github.com/gofiber/template/html/v2 v2.1.3 // indirect
 	github.com/gofiber/utils v1.1.0 // indirect
 	github.com/gofiber/utils/v2 v2.0.4 // indirect
 	github.com/klauspost/compress v1.18.5 // indirect
@@ -29,6 +33,7 @@ require (
 	github.com/mfridman/interpolate v0.0.2 // indirect
 	github.com/ncruces/go-strftime v1.0.0 // indirect
 	github.com/philhofer/fwd v1.2.0 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/savsgio/gotils v0.0.0-20250924091648-bce9a52d7761 // indirect
