@@ -20,7 +20,7 @@ func NewRoomsHandler(m *manager.Manager) *RoomsHandler {
 }
 
 func (h *RoomsHandler) Handle(c fiber.Ctx) error {
-	rooms := make([]RoomData, len(h.manager.Rooms))
+	rooms := make([]RoomData, 0, len(h.manager.Rooms))
 	for _, room := range h.manager.Rooms {
 		roomData, err := room.ToSnapshot()
 		if err != nil {

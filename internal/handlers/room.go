@@ -47,5 +47,5 @@ func (h *RoomHandler) Handle(c fiber.Ctx) error {
 		"ID":       roomData.ID,
 		"Name":     roomData.Name,
 		"Messages": messages,
-	}, "layout")
+	}, "room_layout")
 }
